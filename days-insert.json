@@ -1,0 +1,1427 @@
+[
+    {
+        "date": "2019-09-30",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 145019,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 64355,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 52663,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 42418,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 22175,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 17899,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 18733,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 14777,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13055,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-02",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 146059,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 65101,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 52817,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 42559,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 22514,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 18479,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 18869,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 15125,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13071,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-07",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 149898,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 67953,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 54374,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 42987,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 24455,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 19519,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19530,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 15878,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13071,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-08",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 149959,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 68247,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 54458,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43017,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 24474,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 19653,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19530,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 15909,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13071,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-10",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 150470,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 68879,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 54720,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43299,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 24697,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 20099,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19631,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16080,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13071,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-11",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 150614,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 69848,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 54923,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43632,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 25148,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 20492,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19755,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16282,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13164,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-13",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 150802,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 70113,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 54986,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43682,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 25334,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 20492,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19767,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16326,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13164,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-14",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 151051,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 70334,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 55026,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43748,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 25487,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 20625,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19767,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16344,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13164,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-15",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 151955,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 71265,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 55804,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 43857,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 25719,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21004,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19843,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16716,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13186,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-16",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 152506,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 72092,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 56208,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 44144,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 26258,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21226,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 19986,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 16863,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13186,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-17",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 153187,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 72565,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 56351,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 44357,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 26499,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21350,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 20085,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17064,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13202,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-20",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 153679,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 73498,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 56426,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 44631,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 26719,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21429,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 20387,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17173,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13202,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-21",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 154001,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 73747,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 56573,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 44699,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 26809,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21448,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 20387,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17173,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13202,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-22",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 154632,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 74677,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 56886,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 44990,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 27117,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21448,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 20421,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17337,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17548,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13202,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-23",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 155424,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 75492,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 57277,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45073,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 27664,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21448,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 20948,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17417,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13202,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-24",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 157046,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 77633,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 58373,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45140,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 28470,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 21702,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 21270,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 17840,
+                "rank": 9
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 8
+            },
+            {
+                "name": "Naldy",
+                "xp": 13251,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-25",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 158175,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 78752,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 59269,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45155,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 29574,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 22124,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 21979,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 19019,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 13414,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-28",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 159674,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 80835,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 60251,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45220,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 30802,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 22708,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 23013,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 20593,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 13414,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-29",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 162119,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 83474,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 61265,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45687,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 32134,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 23970,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 23890,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 21612,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 13793,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-10-30",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 164152,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 85455,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 61823,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 45756,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 33449,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 24847,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 24505,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 22222,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 13911,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-11-01",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 167139,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 88526,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 63340,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 46273,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 35608,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 26031,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 25979,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 24013,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17567,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 14389,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-11-02",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 168279,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 89552,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 63567,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 46670,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 36488,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 26645,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 26318,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 24695,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17581,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 14418,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-11-03",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 168700,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 90367,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 63608,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 46681,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 36525,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 26656,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 26820,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 24825,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17581,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 14418,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-11-04",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 169037,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 90862,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 63794,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 46681,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 36782,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 26888,
+                "rank": 7
+            },
+            {
+                "name": "Washingdone",
+                "xp": 26980,
+                "rank": 6
+            },
+            {
+                "name": "KyroZed",
+                "xp": 24897,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17581,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 14536,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    },
+    {
+        "date": "2019-11-05",
+        "people": [
+            {
+                "name": "ode",
+                "xp": 170522,
+                "rank": 1
+            },
+            {
+                "name": "Crouton",
+                "xp": 91880,
+                "rank": 2
+            },
+            {
+                "name": "Pupper",
+                "xp": 63982,
+                "rank": 3
+            },
+            {
+                "name": "theBeef",
+                "xp": 46681,
+                "rank": 4
+            },
+            {
+                "name": "dylwalk",
+                "xp": 37332,
+                "rank": 5
+            },
+            {
+                "name": "Sirobot",
+                "xp": 27652,
+                "rank": 6
+            },
+            {
+                "name": "Washingdone",
+                "xp": 27335,
+                "rank": 7
+            },
+            {
+                "name": "KyroZed",
+                "xp": 25287,
+                "rank": 8
+            },
+            {
+                "name": "Thy",
+                "xp": 17581,
+                "rank": 9
+            },
+            {
+                "name": "Naldy",
+                "xp": 14722,
+                "rank": 10
+            }
+        ],
+        "maxRank": 10,
+        "minRank": 1
+    }
+]

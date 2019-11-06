@@ -1,64 +1,64 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/snyderks/xp-bot/bot"
+	"github.com/snyderks/xp-bot/logger"
 )
 
 // Variables used for command line parameters
 var (
-	Token   string
-	Message string
+	Token string
 )
 
 func init() {
-	flag.StringVar(&Token, "t", "", "Token")
-	flag.StringVar(&Message, "m", "", "Message")
-	flag.Parse()
+	Token = os.Getenv("XP_BOT_TOKEN")
 }
 
-func botSetup() {
+func main() {
+	bot.CreateChart()
+	return
+
+	// Make sure the logger has written its buffer.
+	logger.Log.Sync()
+
+	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
+	dg.Debug = true
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+		logger.Log.Fatal("Failed to initialize Discord object", err.Error())
 		return
 	}
 
-	// Open the websocket and begin listening.
+	// Register the messageCreate func as a callback for MessageCreate events.
+	dg.AddHandler(bot.MessageCreate)
+
+	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("Error opening Discord session: ", err)
+		logger.Log.Fatal("Error opening Discord connection,", err.Error())
+		return
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("GraphBot is now running.  Press CTRL-C to exit.")
+	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+
+	u, err := dg.User("@me")
+	if err != nil {
+		logger.Log.Fatal("Something went wrong when connecting; couldn't get username.",
+			err.Error())
+		return
+	}
+	logger.Log.Info("Connected to Discord as", u.Username)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
 
 	// Cleanly close down the Discord session.
 	dg.Close()
-}
-
-func main() {
-	result, err := bot.Parse(flag.Arg(0))
-	if err != nil {
-		print("Bad.")
-		return
-	}
-
-	counts := make([]string, 0)
-	for _, r := range result {
-		counts = append(counts, strconv.Itoa(r.XP))
-	}
-
-	print("\n" + strings.Join(counts, "\t"))
 }
