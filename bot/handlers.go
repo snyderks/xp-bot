@@ -1,9 +1,9 @@
 package bot
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -11,10 +11,13 @@ import (
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/snyderks/chart"
+	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
 )
 
 var (
+	// DBURI is the location of the database.
 	DBURI = os.Getenv("XP_BOT_DB_URI")
 )
 
@@ -36,7 +39,6 @@ type Args struct {
 // MessageCreate will be called every time a new message is created.
 // Designed to be the way to handle all interaction.
 func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	fmt.Println("Handler called!")
 	// Ignore messages by the bot
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -44,6 +46,8 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, prefix) {
 		// It's a request for the bot to serve a graph up.
+		logger.Log.Info("Handler matched on graph request.",
+			"channel", m.ChannelID, "sent by", m.Author, "content", m.Content)
 		args, err := parseGraphArgs(m.Content)
 		if err != nil {
 			s.ChannelMessageSend(
@@ -52,27 +56,27 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			s.ChannelMessageSend(m.ChannelID, fmt.Sprint(args))
 		}
-	} else if m.Author.Username == "Crouton" /*m.Author.Username == tatsu && m.Author.Bot*/ && strings.Contains(m.Content, leaderboardTrigger) {
+	} else if /*m.Author.Username == "Crouton"*/ m.Author.Username == tatsu && m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
 		// It's a Tatsumaki leaderboard to parse.
 		result, err := Parse(m.Content)
 		if err != nil {
-			log.Print("Couldn't parse Tatsumaki leaderboard:", err.Error())
+			logger.Log.Error("Couldn't parse Tatsumaki leaderboard:", err.Error())
 			return
 		}
 
 		c, err := db.CreateDB(DBURI)
 		if err != nil {
-			log.Print("Couldn't connect to database:", err.Error())
+			logger.Log.Error("Couldn't connect to database:", err.Error())
 			return
 		}
 
 		err = c.AddDay(result)
 		if err != nil {
-			log.Print("Couldn't log the day:", err.Error())
+			logger.Log.Error("Couldn't log the day:", err.Error())
 		}
 		err = c.AddPeople(result)
 		if err != nil {
-			log.Print("Couldn't log people:", err.Error())
+			logger.Log.Error("Couldn't log people:", err.Error())
 		}
 	}
 }
@@ -107,4 +111,18 @@ func parseGraphArgs(s string) (Args, error) {
 		}
 	}
 	return Args{}, errors.New("your command wasn't recognized")
+}
+
+func CreateChart() {
+	graph := chart.Chart{
+		Series: []chart.Series{
+			chart.ContinuousSeries{
+				XValues: []float64{1.0, 2.0, 3.0, 4.0},
+				YValues: []float64{1.0, 2.0, 3.0, 4.0},
+			},
+		},
+	}
+
+	buffer := bytes.NewBuffer([]byte{})
+	graph.Render(chart.PNG, buffer)
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/snyderks/xp-bot/bot"
+	"github.com/snyderks/xp-bot/logger"
 )
 
 // Variables used for command line parameters
@@ -20,12 +21,17 @@ func init() {
 }
 
 func main() {
+	bot.CreateChart()
+	return
+
+	// Make sure the logger has written its buffer.
+	logger.Log.Sync()
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	dg.Debug = true
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+		logger.Log.Fatal("Failed to initialize Discord object", err.Error())
 		return
 	}
 
@@ -35,18 +41,20 @@ func main() {
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
+		logger.Log.Fatal("Error opening Discord connection,", err.Error())
 		return
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+
 	u, err := dg.User("@me")
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.Log.Fatal("Something went wrong when connecting; couldn't get username.",
+			err.Error())
 		return
 	}
-	fmt.Println(u.Username)
+	logger.Log.Info("Connected to Discord as", u.Username)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc

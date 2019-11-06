@@ -19,7 +19,6 @@ func Parse(s string) (map[string]db.Person, error) {
 	if matches == nil {
 		return nil, errors.New("no matches for the parser. Input was not of the correct format")
 	}
-	print(matches)
 
 	counts := make(map[string]db.Person, len(matches))
 

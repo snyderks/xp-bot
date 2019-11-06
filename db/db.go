@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -37,7 +39,7 @@ type History struct {
 type Day struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty"`
 	Date    time.Time          `bson:"date"`
-	People  []Person           `bson:"people"`
+	People  People             `bson:"people"`
 	MaxRank int                `bson:"maxRank"`
 	MinRank int                `bson:"minRank"`
 }
@@ -60,10 +62,17 @@ type result struct {
 	xp   int
 }
 
+// People is an array of Person
+type People []Person
+
+func (x People) Len() int           { return len(x) }
+func (x People) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x People) Less(i, j int) bool { return x[i].Rank < x[j].Rank }
+
 // farEnoughInPast returns whether a time t is far enough in the past
 // to create a new record in the DB instead of simply updating.
 func farEnoughInPast(t time.Time) bool {
-	return int(time.Now().Sub(t).Minutes()) < minutesBeforeNewRecord
+	return int(time.Now().Sub(t).Minutes()) > minutesBeforeNewRecord
 }
 
 func transactionCTX() (context.Context, context.CancelFunc) {
@@ -122,11 +131,26 @@ func (db *DB) AddDay(people map[string]Person) error {
 
 		// All that is left in the map is new records for this document.
 		// Append them.
+		ranks := make([]int, 0)
 		for _, v := range people {
+			ranks = append(ranks, v.Rank)
 			result.People = append(result.People, v)
 		}
+		// Want to make sure we have the max and min available.
+		max, min := util.MaxMin(ranks)
+
+		if max != -1 && max > result.MaxRank {
+			result.MaxRank = max
+		}
+		if min != -1 && min < result.MinRank {
+			result.MinRank = min
+		}
+
+		// Sort the list of people ascending
+		sort.Sort(&result.People)
 
 		// Now we add the new record to the database.
+		logger.Log.Info("Updating day with ID", result.ID)
 		db.Days.UpdateOne(ctx, bson.M{"_id": result.ID}, bson.M{"$set": result})
 	} else {
 		peopleList := make([]Person, 0)
@@ -144,6 +168,11 @@ func (db *DB) AddDay(people map[string]Person) error {
 			MaxRank: max,
 			MinRank: min,
 		}
+
+		// Sort the list of people ascending
+		sort.Sort(&newRecord.People)
+
+		logger.Log.Info("Inserting day:", newRecord)
 		db.Days.InsertOne(ctx, newRecord)
 	}
 
@@ -232,13 +261,15 @@ func (db *DB) AddPeople(people map[string]Person) error {
 		// old, so we make a new one.
 		if err != nil || farEnoughInPast(result.Date) {
 			result = History{UName: k, XP: v.XP, Date: time.Now()}
+			logger.Log.Info("Adding person:", result)
 			_, err = db.People.InsertOne(ctx, result)
 			if err != nil {
 				return err
 			}
 		} else {
 			result = History{ID: result.ID, UName: result.UName, XP: v.XP, Date: result.Date}
-			_, err = db.People.UpdateOne(ctx, bson.M{"_id": result.ID}, result)
+			logger.Log.Info("Updating person with ID", result.ID)
+			_, err = db.People.UpdateOne(ctx, bson.M{"_id": result.ID}, bson.M{"$set": result})
 			if err != nil {
 				return err
 			}
