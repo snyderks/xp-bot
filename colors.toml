@@ -1,0 +1,24 @@
+[people-colors]
+ode = "f1c40f"
+Crouton = "b925ee"
+Pupper = "35bb3e"
+theBeef = "3682fa"
+dylwalk = "e96a00"
+Sirobot = "e91e63"
+Washingdone = "f7cac9"
+KyroZed = "009473"
+Thy = "ffc1a1"
+Naldy = "ff5ca7"
+
+[chart]
+daysLimit = 365
+rankChartTitle = "XP History"
+bg = "26282a"
+fontColor = "e5e5e5"
+axesColor = "eeeeee"
+axesFontSize = 5
+titleFontSize = 8
+seriesStrokeWidth = 3
+height = 1000
+width = 2000
+dpi = 300

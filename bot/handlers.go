@@ -11,7 +11,6 @@ import (
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/snyderks/chart"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
 )
@@ -22,10 +21,11 @@ var (
 )
 
 var (
-	prefix             = "g!"
-	topSwitch          = []string{"top", "t"}
-	usersSwitch        = []string{"users", "u", "user", "us"}
-	usage              = "`g! <command> [<args>]\ng! top [number]\ng! users <usernames>`"
+	prefix      = "g!"
+	topSwitch   = []string{"top", "t"}
+	usersSwitch = []string{"users", "u", "user", "us"}
+	//usage            = "`g! <command> [<args>]\ng! top [number]\ng! users <usernames>`"
+	usage              = `g! <command> [<args>]\ng! top [number]`
 	tatsu              = "Tatsumaki"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
@@ -46,37 +46,51 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, prefix) {
 		// It's a request for the bot to serve a graph up.
-		logger.Log.Info("Handler matched on graph request.",
+		logger.Log.Info("Handler matched on graph request. ",
 			"channel", m.ChannelID, "sent by", m.Author, "content", m.Content)
 		args, err := parseGraphArgs(m.Content)
+		if args.Usernames != nil {
+			// Not supported yet.
+			s.ChannelMessageSend(m.ChannelID, usage)
+			return
+		}
 		if err != nil {
 			s.ChannelMessageSend(
 				m.ChannelID,
 				fmt.Sprintf("%s %s\n%s", "Looks like your request was misformatted: ", err.Error(), usage))
-		} else {
-			s.ChannelMessageSend(m.ChannelID, fmt.Sprint(args))
+		}
+		img, path, err := makeGraph(&args)
+		if err != nil {
+			if strings.Contains(err.Error(), NeedMoreRecordsError) {
+				s.ChannelMessageSend(m.ChannelID, NeedMoreRecordsError)
+			}
+		}
+		logger.Log.Info("Sending image")
+		_, err = s.ChannelFileSend(m.ChannelID, path, bytes.NewReader(img))
+		if err != nil {
+			logger.Log.Error("Failed to send image. ", err.Error(), "imageLen", len(img), "path", path)
 		}
 	} else if /*m.Author.Username == "Crouton"*/ m.Author.Username == tatsu && m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
 		// It's a Tatsumaki leaderboard to parse.
 		result, err := Parse(m.Content)
 		if err != nil {
-			logger.Log.Error("Couldn't parse Tatsumaki leaderboard:", err.Error())
+			logger.Log.Error("Couldn't parse Tatsumaki leaderboard: ", err.Error())
 			return
 		}
 
 		c, err := db.CreateDB(DBURI)
 		if err != nil {
-			logger.Log.Error("Couldn't connect to database:", err.Error())
+			logger.Log.Error("Couldn't connect to database: ", err.Error())
 			return
 		}
 
 		err = c.AddDay(result)
 		if err != nil {
-			logger.Log.Error("Couldn't log the day:", err.Error())
+			logger.Log.Error("Couldn't log the day: ", err.Error())
 		}
 		err = c.AddPeople(result)
 		if err != nil {
-			logger.Log.Error("Couldn't log people:", err.Error())
+			logger.Log.Error("Couldn't log people: ", err.Error())
 		}
 	}
 }
@@ -113,16 +127,27 @@ func parseGraphArgs(s string) (Args, error) {
 	return Args{}, errors.New("your command wasn't recognized")
 }
 
-func CreateChart() {
-	graph := chart.Chart{
-		Series: []chart.Series{
-			chart.ContinuousSeries{
-				XValues: []float64{1.0, 2.0, 3.0, 4.0},
-				YValues: []float64{1.0, 2.0, 3.0, 4.0},
-			},
-		},
+func makeGraph(args *Args) (img []byte, path string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Error("Recovered in makeGraph", r)
+			err = errors.New("something went wrong when generating the graph")
+		}
+	}()
+
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database:", err.Error())
+		return nil, "", err
 	}
 
-	buffer := bytes.NewBuffer([]byte{})
-	graph.Render(chart.PNG, buffer)
+	src, _, err := RankLineChart(&c, args)
+	if err != nil {
+		logger.Log.Error("Failed to construct chart:", err.Error())
+		return nil, "", err
+	}
+
+	img, path = src.Make()
+
+	return img, path, nil
 }
