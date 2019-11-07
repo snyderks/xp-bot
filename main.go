@@ -21,15 +21,11 @@ func init() {
 }
 
 func main() {
-	bot.CreateChart()
-	return
-
 	// Make sure the logger has written its buffer.
 	logger.Log.Sync()
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
-	dg.Debug = true
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize Discord object", err.Error())
 		return
@@ -54,7 +50,8 @@ func main() {
 			err.Error())
 		return
 	}
-	logger.Log.Info("Connected to Discord as", u.Username)
+	dg.UpdateStatus(1, "Type g! for a graph")
+	logger.Log.Info("Connected to Discord as ", u.Username)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc

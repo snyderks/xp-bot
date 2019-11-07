@@ -210,11 +210,11 @@ func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
 	notFound = make([]string, 0)
 
 	people = make([]HistoryRange, 0)
-	opts := options.Find().SetSort(bson.M{"date": -1})
+	opts := options.Find().SetSort(bson.M{"date": 1})
 
 	for _, uname := range unames {
 		cursor, err := db.People.Find(ctx,
-			bson.M{"person": uname,
+			bson.M{"name": uname,
 				"date": bson.M{
 					"$gt": time.Now().AddDate(0, 0, -maxDays)}},
 			opts)
