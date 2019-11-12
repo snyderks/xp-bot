@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -21,11 +22,11 @@ var (
 )
 
 var (
-	prefix      = "g!"
-	topSwitch   = []string{"top", "t"}
-	usersSwitch = []string{"users", "u", "user", "us"}
-	//usage            = "`g! <command> [<args>]\ng! top [number]\ng! users <usernames>`"
-	usage              = `g! <command> [<args>]\ng! top [number]`
+	prefix             = "g!"
+	topSwitch          = []string{"top", "t"}
+	usersSwitch        = []string{"users", "u", "user", "us"}
+	lastSwitch         = []string{"last", "l", "days", "d"}
+	usage              = "`g! top [number] last [days]`"
 	tatsu              = "Tatsumaki"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
@@ -34,6 +35,7 @@ var (
 type Args struct {
 	Usernames []string
 	Top       int
+	Days      int
 }
 
 // MessageCreate will be called every time a new message is created.
@@ -44,7 +46,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if strings.HasPrefix(m.Content, prefix) {
+	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		// It's a request for the bot to serve a graph up.
 		logger.Log.Info("Handler matched on graph request. ",
 			"channel", m.ChannelID, "sent by", m.Author, "content", m.Content)
@@ -57,12 +59,14 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if err != nil {
 			s.ChannelMessageSend(
 				m.ChannelID,
-				fmt.Sprintf("%s %s\n%s", "Looks like your request was misformatted: ", err.Error(), usage))
+				fmt.Sprintf("%s %s", "Your command wasn't recognized. The correct usage is:", usage))
+			return
 		}
 		img, path, err := makeGraph(&args)
 		if err != nil {
 			if strings.Contains(err.Error(), NeedMoreRecordsError) {
 				s.ChannelMessageSend(m.ChannelID, NeedMoreRecordsError)
+				return
 			}
 		}
 		logger.Log.Info("Sending image")
@@ -101,16 +105,41 @@ func parseGraphArgs(s string) (Args, error) {
 	splitted := strings.Split(s, " ")
 	if len(splitted) == 1 {
 		// No args. Return the default.
-		return Args{nil, 10}, nil
+		return Args{nil, 10, 0}, nil
 	} else {
 		splitted = splitted[1:]
 		for _, x := range topSwitch {
-			if splitted[0] == x {
-				i, err := strconv.Atoi(splitted[1])
+			if splitted[0] == x && len(splitted) >= 2 {
+				top, err := strconv.Atoi(splitted[1])
 				if err != nil {
-					return Args{}, errors.New("please pass a number as the argument to top")
+					return Args{},
+						errors.New("please pass a number as the argument to top")
 				}
-				return Args{nil, i}, nil
+
+				// Check for last x days
+				// TODO: move this into its own function for use with usernames.
+				if len(splitted) >= 4 {
+					for _, x := range lastSwitch {
+						if splitted[2] == x {
+							last, err := strconv.Atoi(splitted[3])
+							if err != nil {
+								return Args{},
+									errors.New("please pass a number as the argument to last")
+							}
+							if last >= chart.GlobalChartConfig.DaysLimit {
+								return Args{},
+									errors.New("too many days requested. Please request fewer days")
+							}
+							if last <= 0 {
+								return Args{},
+									errors.New("nice try")
+							}
+							return Args{nil, top, last}, nil
+						}
+					}
+				}
+
+				return Args{nil, top, 0}, nil
 			}
 		}
 		for _, x := range usersSwitch {

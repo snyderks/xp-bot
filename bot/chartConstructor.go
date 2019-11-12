@@ -41,8 +41,12 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	}
 
 	// Get XP history for each person
+	// Replace property on args with default if necessary
+	if args.Days == 0 {
+		args.Days = chart.GlobalChartConfig.DaysLimit
+	}
 	notFound, xpHistories, err := c.ReadPeople(people,
-		chart.GlobalChartConfig.DaysLimit)
+		args.Days)
 
 	if err != nil {
 		return chart.LineChartSource{}, nil,

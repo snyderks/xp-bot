@@ -2,7 +2,9 @@ package chart
 
 import (
 	"bytes"
+	"fmt"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/snyderks/chart"
@@ -34,6 +36,12 @@ type LineChartSource struct {
 // Make returns a byte array encoded as an image containing the chart
 // and a filename for the image.
 func (src LineChartSource) Make() ([]byte, string) {
+	// Give a 10% buffer at the top to the highest value
+	// Round to the second-highest digit (i.e. 10000 rounds to nearest 1000)
+	rangeMax := util.Round(src.Max*1.10, math.Pow10(int(math.Floor(math.Log10(src.Max))-1)))
+
+	src.Max = rangeMax
+
 	graph := chart.Chart{
 		DPI:    GlobalChartConfig.DPI,
 		Width:  GlobalChartConfig.Width,
@@ -58,6 +66,7 @@ func (src LineChartSource) Make() ([]byte, string) {
 			},
 		},
 		YAxis: chart.YAxis{
+			Ticks: getYAxisTicks(src.Min, src.Max, src.LogScale),
 			Style: chart.Style{
 				FontColor: drawing.ColorFromHex(GlobalChartConfig.FontColor),
 				FontSize:  GlobalChartConfig.AxesFontSize,
@@ -65,15 +74,20 @@ func (src LineChartSource) Make() ([]byte, string) {
 		},
 	}
 	series := make([]chart.Series, 0)
+	colorIdx := 0
 	for i, person := range src.Labels {
-		colorForPerson, err := GetUserColor(Config, person)
+		var colorForPerson drawing.Color
+		result, err := GetUserColor(Config, person)
 		if err != nil {
-			colorForPerson = "ff0000"
+			colorForPerson = chart.ColorPalette.GetSeriesColor(chart.DefaultColorPalette, colorIdx)
+			colorIdx++
+		} else {
+			colorForPerson = drawing.ColorFromHex(result)
 		}
 		series = append(series,
 			chart.TimeSeries{
 				Style: chart.Style{
-					StrokeColor: drawing.ColorFromHex(colorForPerson),
+					StrokeColor: colorForPerson,
 					StrokeWidth: GlobalChartConfig.SeriesStrokeWidth,
 					FontColor:   drawing.ColorFromHex(GlobalChartConfig.FontColor),
 				},
@@ -82,10 +96,6 @@ func (src LineChartSource) Make() ([]byte, string) {
 				Name:    person,
 			})
 	}
-
-	// Give a 10% buffer at the top to the highest value
-	// Round to the second-highest digit (i.e. 10000 rounds to nearest 1000)
-	rangeMax := util.Round(src.Max*1.10, math.Pow10(int(math.Floor(math.Log10(src.Max))-1)))
 
 	if src.LogScale {
 		graph.YAxis.Range = &LogRange{Min: src.Min, Max: rangeMax}
@@ -108,4 +118,29 @@ func (src LineChartSource) Make() ([]byte, string) {
 	buf := bytes.NewBuffer([]byte{})
 	graph.Render(chart.PNG, buf)
 	return buf.Bytes(), "chart.png"
+}
+
+func getYAxisTicks(min float64, max float64, log bool) []chart.Tick {
+	var interval float64
+	if log {
+		interval = (math.Log10(max) - math.Log10(min)) / float64(GlobalChartConfig.TickNum)
+	} else {
+		interval = (max - min) / float64(GlobalChartConfig.TickNum)
+	}
+
+	ticks := make([]chart.Tick, GlobalChartConfig.TickNum+1)
+	for i := 0; i <= GlobalChartConfig.TickNum; i++ {
+		var next float64
+		if log {
+			next = math.Pow(10, math.Log10(min)+interval*float64(i))
+		} else {
+			next = min + interval*float64(i)
+		}
+
+		next = util.Round(next, math.Pow10(int(math.Floor(math.Log10(next))-1)))
+
+		ticks[i] = chart.Tick{Value: next, Label: strconv.Itoa(int(next))}
+	}
+	fmt.Println(ticks)
+	return ticks
 }

@@ -254,13 +254,15 @@ func (db *DB) readMostRecentPerson(uname string) (History, error) {
 func (db *DB) AddPeople(people map[string]Person) error {
 	ctx, cancel := transactionCTX()
 	defer cancel()
+
+	t := time.Now()
 	for k, v := range people {
 		result, err := db.readMostRecentPerson(k)
 		// We either couldn't get a result (which is fine)
 		// or the result was more than minutesBeforeNewRecord
 		// old, so we make a new one.
 		if err != nil || farEnoughInPast(result.Date) {
-			result = History{UName: k, XP: v.XP, Date: time.Now()}
+			result = History{UName: k, XP: v.XP, Date: t}
 			logger.Log.Info("Adding person:", result)
 			_, err = db.People.InsertOne(ctx, result)
 			if err != nil {

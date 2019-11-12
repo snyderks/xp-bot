@@ -22,6 +22,7 @@ type GlobalParams struct {
 	Height            int     `toml:"height"`
 	Width             int     `toml:"width"`
 	DPI               float64 `toml:"dpi"`
+	TickNum           int     `toml:"tickNum"`
 }
 
 type doc struct {
