@@ -7,10 +7,22 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/freetype/truetype"
 	"github.com/snyderks/chart"
 	"github.com/snyderks/chart/drawing"
 	"github.com/snyderks/xp-bot/util"
 )
+
+var fontPath = "./Ubuntu-Merged.ttf"
+var font *truetype.Font
+
+func init() {
+	f, err := GetFont(fontPath)
+	if err != nil {
+		panic(err)
+	}
+	font = f
+}
 
 // LineChartSource defines the data structure required to create a line chart.
 type LineChartSource struct {
@@ -31,6 +43,8 @@ type LineChartSource struct {
 	Max float64
 	// Min is the minimum XP value of Series.
 	Min float64
+	// ShowMilestones tells the line chart whether to show the milestone lines.
+	ShowMilestones bool
 }
 
 // Make returns a byte array encoded as an image containing the chart
@@ -47,6 +61,7 @@ func (src LineChartSource) Make() ([]byte, string) {
 		Width:  GlobalChartConfig.Width,
 		Height: GlobalChartConfig.Height,
 		Title:  src.Title,
+		Font:   font,
 		TitleStyle: chart.Style{
 			Padding:   chart.NewBox(30, 0, 0, 0),
 			FontColor: drawing.ColorFromHex(GlobalChartConfig.FontColor),
@@ -75,6 +90,7 @@ func (src LineChartSource) Make() ([]byte, string) {
 	}
 	series := make([]chart.Series, 0)
 	colorIdx := 0
+	var firstSeries chart.TimeSeries
 	for i, person := range src.Labels {
 		var colorForPerson drawing.Color
 		result, err := GetUserColor(Config, person)
@@ -84,23 +100,45 @@ func (src LineChartSource) Make() ([]byte, string) {
 		} else {
 			colorForPerson = drawing.ColorFromHex(result)
 		}
-		series = append(series,
-			chart.TimeSeries{
-				Style: chart.Style{
-					StrokeColor: colorForPerson,
-					StrokeWidth: GlobalChartConfig.SeriesStrokeWidth,
-					FontColor:   drawing.ColorFromHex(GlobalChartConfig.FontColor),
-				},
-				XValues: src.X,
-				YValues: src.Series[i],
-				Name:    person,
-			})
+		s := chart.TimeSeries{
+			Style: chart.Style{
+				StrokeColor: colorForPerson,
+				StrokeWidth: GlobalChartConfig.SeriesStrokeWidth,
+				FontColor:   drawing.ColorFromHex(GlobalChartConfig.FontColor),
+			},
+			XValues: src.X,
+			YValues: src.Series[i],
+			Name:    person,
+		}
+		series = append(series, s)
+		if i == 0 {
+			firstSeries = s
+		}
 	}
 
 	if src.LogScale {
 		graph.YAxis.Range = &LogRange{Min: src.Min, Max: rangeMax}
 	} else {
 		graph.YAxis.Range = &chart.ContinuousRange{Min: src.Min, Max: rangeMax}
+	}
+
+	if src.ShowMilestones {
+		for _, ms := range GlobalChartConfig.Milestones {
+			if float64(ms.XP) < src.Max && float64(ms.XP) > src.Min {
+				line := &HorizontalLineSeries{
+					Style: chart.Style{
+						HiddenOnLegend:  true,
+						StrokeColor:     chart.ColorLightGray,
+						StrokeDashArray: []float64{5.0, 5.0},
+						FontSize:        GlobalChartConfig.AxesFontSize,
+					},
+					Name:        ms.Name,
+					InnerSeries: firstSeries,
+					Value:       float64(ms.XP)}
+				series = append(series, line)
+				series = append(series, chart.LastValueAnnotationSeries(line))
+			}
+		}
 	}
 
 	graph.Series = series

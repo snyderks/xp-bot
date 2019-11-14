@@ -128,13 +128,14 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	}
 
 	return chart.LineChartSource{
-			X:        x,
-			Series:   series,
-			Labels:   people,
-			Title:    chart.GlobalChartConfig.RankChartTitle,
-			LogScale: true,
-			Max:      float64(overallMax),
-			Min:      float64(overallMin),
+			X:              x,
+			Series:         series,
+			Labels:         people,
+			Title:          chart.GlobalChartConfig.RankChartTitle,
+			LogScale:       true,
+			ShowMilestones: true,
+			Max:            float64(overallMax),
+			Min:            float64(overallMin),
 		},
 		notFound, nil
 }

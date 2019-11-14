@@ -11,22 +11,29 @@ import (
 
 // GlobalParams is the structure of the global parameters for every chart.
 type GlobalParams struct {
-	DaysLimit         int     `toml:"daysLimit"`
-	RankChartTitle    string  `toml:"rankChartTitle"`
-	BG                string  `toml:"bg"`
-	FontColor         string  `toml:"fontColor"`
-	AxesColor         string  `toml:"axesColor"`
-	AxesFontSize      float64 `toml:"axesFontSize"`
-	TitleFontSize     float64 `toml:"titleFontSize"`
-	SeriesStrokeWidth float64 `toml:"seriesStrokeWidth"`
-	Height            int     `toml:"height"`
-	Width             int     `toml:"width"`
-	DPI               float64 `toml:"dpi"`
-	TickNum           int     `toml:"tickNum"`
+	DaysLimit         int         `toml:"daysLimit"`
+	RankChartTitle    string      `toml:"rankChartTitle"`
+	BG                string      `toml:"bg"`
+	FontColor         string      `toml:"fontColor"`
+	AxesColor         string      `toml:"axesColor"`
+	AxesFontSize      float64     `toml:"axesFontSize"`
+	TitleFontSize     float64     `toml:"titleFontSize"`
+	SeriesStrokeWidth float64     `toml:"seriesStrokeWidth"`
+	Height            int         `toml:"height"`
+	Width             int         `toml:"width"`
+	DPI               float64     `toml:"dpi"`
+	TickNum           int         `toml:"tickNum"`
+	Milestones        []Milestone `toml:"milestones"`
 }
 
 type doc struct {
 	ChartColors GlobalParams `toml:"chart"`
+}
+
+// Milestone is a server-specific level with a corresponding XP cutoff.
+type Milestone struct {
+	Name string `toml:"name"`
+	XP   int    `toml:"xp"`
 }
 
 // Config is the object containing the configuration options for the chart.

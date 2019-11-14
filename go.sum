@@ -32,8 +32,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.3.0 h1:RR9dF3JtopPvtkroDZuVD7qquD0bnHlKSqaQhgwt8yk=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/snyderks/chart v2.0.2+incompatible h1:TUZASvzTDf1MP95IMgHA9AGDcuRxz/MPZmOYXSx/GuQ=
-github.com/snyderks/chart v2.0.2+incompatible/go.mod h1:DM5Avk6xtCxtaVx86U0gaQYudZS7tZs/dkt5XoyKSl4=
+github.com/snyderks/chart v2.1.0+incompatible h1:DmUFfmvHhkAA3BNnC/h2g8JQ4ZAxt07HMonq10HYZLM=
+github.com/snyderks/chart v2.1.0+incompatible/go.mod h1:DM5Avk6xtCxtaVx86U0gaQYudZS7tZs/dkt5XoyKSl4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
