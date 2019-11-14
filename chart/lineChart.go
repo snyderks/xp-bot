@@ -136,7 +136,7 @@ func (src LineChartSource) Make() ([]byte, string) {
 					InnerSeries: firstSeries,
 					Value:       float64(ms.XP)}
 				series = append(series, line)
-				series = append(series, chart.LastValueAnnotationSeries(line))
+				series = append(series, LastValueLabeledAnnotationSeries(line, ms.Name))
 			}
 		}
 	}
