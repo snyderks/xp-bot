@@ -22,6 +22,7 @@ top users. Please type t!top and try again.`
 // Returns an error if the most recent day doesn't contain all the required
 // records or if a generic error occurred.
 func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+	fmt.Println(args)
 	day, err := c.ReadNewestDay()
 	if err != nil {
 		return chart.LineChartSource{}, nil, errors.New(fmt.Sprint("failed to retrieve day", err.Error()))
@@ -136,6 +137,7 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 			ShowMilestones: true,
 			Max:            float64(overallMax),
 			Min:            float64(overallMin),
+			King:           args.King,
 		},
 		notFound, nil
 }

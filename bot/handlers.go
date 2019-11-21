@@ -26,6 +26,7 @@ var (
 	topSwitch          = []string{"top", "t"}
 	usersSwitch        = []string{"users", "u", "user", "us"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
+	pup                = "king"
 	usage              = "`g! top [number] last [days]`"
 	tatsu              = "Tatsumaki"
 	leaderboardTrigger = "Guild Score Leaderboards"
@@ -36,6 +37,7 @@ type Args struct {
 	Usernames []string
 	Top       int
 	Days      int
+	King      bool
 }
 
 // MessageCreate will be called every time a new message is created.
@@ -49,7 +51,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		// It's a request for the bot to serve a graph up.
 		logger.Log.Info("Handler matched on graph request. ",
-			"channel", m.ChannelID, "sent by", m.Author, "content", m.Content)
+			"channel: ", m.ChannelID, "sent by: ", m.Author, "content: ", m.Content)
 		args, err := parseGraphArgs(m.Content)
 		if args.Usernames != nil {
 			// Not supported yet.
@@ -105,52 +107,67 @@ func parseGraphArgs(s string) (Args, error) {
 	splitted := strings.Split(s, " ")
 	if len(splitted) == 1 {
 		// No args. Return the default.
-		return Args{nil, 10, 0}, nil
-	} else {
-		splitted = splitted[1:]
-		for _, x := range topSwitch {
-			if splitted[0] == x && len(splitted) >= 2 {
-				top, err := strconv.Atoi(splitted[1])
-				if err != nil {
-					return Args{},
-						errors.New("please pass a number as the argument to top")
-				}
+		return Args{nil, 10, 0, false}, nil
+	}
+	args := Args{}
 
-				// Check for last x days
-				// TODO: move this into its own function for use with usernames.
-				if len(splitted) >= 4 {
-					for _, x := range lastSwitch {
-						if splitted[2] == x {
-							last, err := strconv.Atoi(splitted[3])
-							if err != nil {
-								return Args{},
-									errors.New("please pass a number as the argument to last")
-							}
-							if last >= chart.GlobalChartConfig.DaysLimit {
-								return Args{},
-									errors.New("too many days requested. Please request fewer days")
-							}
-							if last <= 0 {
-								return Args{},
-									errors.New("nice try")
-							}
-							return Args{nil, top, last}, nil
+	splitted = splitted[1:]
+
+	if splitted[len(splitted)-1] == pup {
+		args.King = true
+		splitted = splitted[1:]
+	}
+	if len(splitted) == 0 {
+		// All done. Return default again!
+		args.Top = 10
+		return args, nil
+	}
+
+	for _, x := range topSwitch {
+		if len(splitted) >= 2 && splitted[0] == x {
+			top, err := strconv.Atoi(splitted[1])
+			if err != nil {
+				return Args{},
+					errors.New("please pass a number as the argument to top")
+			}
+
+			// Check for last x days
+			// TODO: move this into its own function for use with usernames.
+			if len(splitted) >= 4 {
+				for _, x := range lastSwitch {
+					if splitted[2] == x {
+						last, err := strconv.Atoi(splitted[3])
+						if err != nil {
+							return Args{},
+								errors.New("please pass a number as the argument to last")
 						}
+						if last >= chart.GlobalChartConfig.DaysLimit {
+							return Args{},
+								errors.New("too many days requested. Please request fewer days")
+						}
+						if last <= 0 {
+							return Args{},
+								errors.New("nice try")
+						}
+						args.Top = top
+						args.Days = last
+						return args, nil
 					}
 				}
+			}
 
-				return Args{nil, top, 0}, nil
-			}
+			args.Top = top
+			return args, nil
 		}
-		for _, x := range usersSwitch {
-			if splitted[0] == x {
-				if len(splitted) == 1 {
-					return Args{},
-						errors.New("please pass at least one username as the argument to users")
-				}
-				names := util.StripUsernames(splitted[1:])
-				return Args{Usernames: names}, nil
+	}
+	for _, x := range usersSwitch {
+		if splitted[0] == x {
+			if len(splitted) == 1 {
+				return Args{},
+					errors.New("please pass at least one username as the argument to users")
 			}
+			names := util.StripUsernames(splitted[1:])
+			return Args{Usernames: names}, nil
 		}
 	}
 	return Args{}, errors.New("your command wasn't recognized")

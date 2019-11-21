@@ -2,26 +2,32 @@ package chart
 
 import (
 	"bytes"
-	"fmt"
+	"image"
+	"image/draw"
+	"image/png"
 	"math"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/golang/freetype/truetype"
 	"github.com/snyderks/chart"
 	"github.com/snyderks/chart/drawing"
+	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
 )
 
 var fontPath = "./Ubuntu-Merged.ttf"
 var font *truetype.Font
+var chartPath = "chart.png"
 
 func init() {
 	f, err := GetFont(fontPath)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		font = f
+	} else {
+		font = nil
 	}
-	font = f
 }
 
 // LineChartSource defines the data structure required to create a line chart.
@@ -45,6 +51,8 @@ type LineChartSource struct {
 	Min float64
 	// ShowMilestones tells the line chart whether to show the milestone lines.
 	ShowMilestones bool
+	// King tells the line chart whether to make the chart kingly.
+	King bool
 }
 
 // Make returns a byte array encoded as an image containing the chart
@@ -61,7 +69,6 @@ func (src LineChartSource) Make() ([]byte, string) {
 		Width:  GlobalChartConfig.Width,
 		Height: GlobalChartConfig.Height,
 		Title:  src.Title,
-		Font:   font,
 		TitleStyle: chart.Style{
 			Padding:   chart.NewBox(30, 0, 0, 0),
 			FontColor: drawing.ColorFromHex(GlobalChartConfig.FontColor),
@@ -88,6 +95,11 @@ func (src LineChartSource) Make() ([]byte, string) {
 			},
 		},
 	}
+
+	if font != nil {
+		graph.Font = font
+	}
+
 	series := make([]chart.Series, 0)
 	colorIdx := 0
 	var firstSeries chart.TimeSeries
@@ -155,7 +167,46 @@ func (src LineChartSource) Make() ([]byte, string) {
 
 	buf := bytes.NewBuffer([]byte{})
 	graph.Render(chart.PNG, buf)
-	return buf.Bytes(), "chart.png"
+
+	if src.King {
+		g, err := png.Decode(buf)
+		// Return it anyway.
+		if err != nil {
+			logger.Log.Error("didn't decode graph ", err)
+			return buf.Bytes(), chartPath
+		}
+		pup, err := os.Open("./assets/pupKING.png")
+		// Return it anyway.
+		if err != nil {
+			logger.Log.Error("didn't read king ", err)
+			return buf.Bytes(), chartPath
+		}
+		img, _, err := image.Decode(pup)
+		// Return it anyway.
+		if err != nil {
+			logger.Log.Error("didn't decode king ", err)
+			return buf.Bytes(), chartPath
+		}
+		canvas := image.NewRGBA(g.Bounds())
+		draw.Draw(canvas, canvas.Bounds(), g, image.Point{}, draw.Src)
+		start := img.Bounds()
+		// Start the rectangle at the midpoint - half pup's width (so it's centered)
+		r := start.Sub(start.Min).
+			Add(canvas.Bounds().Max.
+				Div(2).
+				Sub(img.Bounds().Max.Div(2)))
+		draw.Draw(canvas, r, img, start.Min, draw.Over)
+
+		newBuf := bytes.NewBuffer([]byte{})
+		err = png.Encode(newBuf, canvas)
+		// Return the original.
+		if err != nil {
+			logger.Log.Error("couldn't encode the image ", err)
+			return buf.Bytes(), chartPath
+		}
+		return newBuf.Bytes(), chartPath
+	}
+	return buf.Bytes(), chartPath
 }
 
 func getYAxisTicks(min float64, max float64, log bool) []chart.Tick {
@@ -179,6 +230,5 @@ func getYAxisTicks(min float64, max float64, log bool) []chart.Tick {
 
 		ticks[i] = chart.Tick{Value: next, Label: strconv.Itoa(int(next))}
 	}
-	fmt.Println(ticks)
 	return ticks
 }
