@@ -3,7 +3,7 @@ package bot
 import "testing"
 
 // s is the test version of the leaderboard.
-var s string = `:cityscape:  |  Guild Score Leaderboards for hehe central
+var s = `:cityscape:  |  Guild Score Leaderboards for hehe central
 
 	📋 Rank | Name
 	

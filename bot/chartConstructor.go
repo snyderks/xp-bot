@@ -22,6 +22,7 @@ top users. Please type t!top and try again.`
 // Returns an error if the most recent day doesn't contain all the required
 // records or if a generic error occurred.
 func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+	fmt.Println(args)
 	day, err := c.ReadNewestDay()
 	if err != nil {
 		return chart.LineChartSource{}, nil, errors.New(fmt.Sprint("failed to retrieve day", err.Error()))
@@ -41,8 +42,12 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	}
 
 	// Get XP history for each person
+	// Replace property on args with default if necessary
+	if args.Days == 0 {
+		args.Days = chart.GlobalChartConfig.DaysLimit
+	}
 	notFound, xpHistories, err := c.ReadPeople(people,
-		chart.GlobalChartConfig.DaysLimit)
+		args.Days)
 
 	if err != nil {
 		return chart.LineChartSource{}, nil,
@@ -124,13 +129,15 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	}
 
 	return chart.LineChartSource{
-			X:        x,
-			Series:   series,
-			Labels:   people,
-			Title:    chart.GlobalChartConfig.RankChartTitle,
-			LogScale: true,
-			Max:      float64(overallMax),
-			Min:      float64(overallMin),
+			X:              x,
+			Series:         series,
+			Labels:         people,
+			Title:          chart.GlobalChartConfig.RankChartTitle,
+			LogScale:       true,
+			ShowMilestones: true,
+			Max:            float64(overallMax),
+			Min:            float64(overallMin),
+			King:           args.King,
 		},
 		notFound, nil
 }

@@ -22,3 +22,11 @@ seriesStrokeWidth = 3
 height = 1000
 width = 2000
 dpi = 300
+tickNum = 10
+milestones = [
+    {name = "Talkative", xp = 2500},
+    {name = "Regular", xp = 5000},
+    {name = "Veteran", xp = 15000},
+    {name = "Distinguished", xp = 50000},
+    {name = "Exquisite", xp = 100000},
+]
