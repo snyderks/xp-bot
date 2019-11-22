@@ -222,11 +222,10 @@ func getYAxisTicks(min float64, max float64, log bool) []chart.Tick {
 		var next float64
 		if log {
 			next = math.Pow(10, math.Log10(min)+interval*float64(i))
+			next = util.Round(next, math.Pow10(int(math.Floor(math.Log10(next))-1)))
 		} else {
 			next = min + interval*float64(i)
 		}
-
-		next = util.Round(next, math.Pow10(int(math.Floor(math.Log10(next))-1)))
 
 		ticks[i] = chart.Tick{Value: next, Label: strconv.Itoa(int(next))}
 	}

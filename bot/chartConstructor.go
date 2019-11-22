@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/snyderks/xp-bot/chart"
@@ -17,12 +18,16 @@ import (
 var NeedMoreRecordsError = `The most recent record does not contain all of the 
 top users. Please type t!top and try again.`
 
+// FailedToRetrievePeopleError is an error type designed to be returned to the user.
+// Check for it and return it to the user if it appears.
+var FailedToRetrievePeopleError = `One or more usernames weren't correct. Try
+fixing the following usernames:`
+
 // RankLineChart retrieves records to construct a line chart of the top N users
 // and returns the source and a list of usernames that couldn't be retrieved.
 // Returns an error if the most recent day doesn't contain all the required
 // records or if a generic error occurred.
 func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
-	fmt.Println(args)
 	day, err := c.ReadNewestDay()
 	if err != nil {
 		return chart.LineChartSource{}, nil, errors.New(fmt.Sprint("failed to retrieve day", err.Error()))
@@ -49,15 +54,72 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	notFound, xpHistories, err := c.ReadPeople(people,
 		args.Days)
 
+	series, x, overallMax, overallMin := constructSeries(xpHistories)
+
 	if err != nil {
 		return chart.LineChartSource{}, nil,
-			errors.New(fmt.Sprint("failed to retrieve people", err.Error()))
+			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
 	}
 
 	logger.Log.Info("Retrieved people. Failed to retrieve: ", notFound)
 
-	series := make([][]float64, len(xpHistories))
-	x := make([]time.Time, 0)
+	return chart.LineChartSource{
+			X:              x,
+			Series:         series,
+			Labels:         people,
+			Title:          chart.GlobalChartConfig.RankChartTitle,
+			LogScale:       true,
+			ShowMilestones: true,
+			Max:            float64(overallMax),
+			Min:            float64(overallMin),
+			King:           args.King,
+		},
+		notFound, nil
+}
+
+// UserLineChart retrieves records to construct a line chart of the users specified
+// and returns the source and a list of usernames that couldn't be retrieved.
+// Returns an error if a user wasn't found or if a generic error occurs.
+func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+	// Get XP history for each person
+	// Replace property on args with default if necessary
+	if args.Days == 0 {
+		args.Days = chart.GlobalChartConfig.DaysLimit
+	}
+	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
+		args.Days)
+
+	if err != nil {
+		return chart.LineChartSource{}, nil,
+			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
+	}
+
+	series, x, overallMax, overallMin := constructSeries(xpHistories)
+
+	logger.Log.Info("Retrieved people. Failed to retrieve: ", notFound)
+
+	return chart.LineChartSource{
+			X:      x,
+			Series: series,
+			Labels: args.Usernames,
+			Title: fmt.Sprintf("Comparison of %s",
+				strings.Join(args.Usernames, ", ")),
+			LogScale:       false,
+			ShowMilestones: true,
+			Max:            float64(overallMax),
+			Min:            float64(overallMin),
+			King:           args.King,
+		},
+		notFound, nil
+}
+
+// constructSeries creates a full set of points from a list of sparse arrays,
+// replicating values in the sparse arrays by aligning the time values within them.
+// returns the
+func constructSeries(xpHistories []db.HistoryRange) (series [][]float64,
+	x []time.Time, overallMin int, overallMax int) {
+	series = make([][]float64, len(xpHistories))
+	x = make([]time.Time, 0)
 	seriesIdx := make([]int, len(xpHistories))
 
 	// First, find the smallest date that starts all of the series.
@@ -68,8 +130,8 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	minDate, _ := util.Min(firstDates)
 
 	// Track the max and min overall to pass off.
-	overallMax := 0
-	overallMin := math.MaxInt64
+	overallMax = 0
+	overallMin = math.MaxInt64
 
 	// Now we step through all the histories to construct a set of series
 	// and the X-axis.
@@ -127,17 +189,5 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 		}
 		minDate, _ = util.Min(firstDates)
 	}
-
-	return chart.LineChartSource{
-			X:              x,
-			Series:         series,
-			Labels:         people,
-			Title:          chart.GlobalChartConfig.RankChartTitle,
-			LogScale:       true,
-			ShowMilestones: true,
-			Max:            float64(overallMax),
-			Min:            float64(overallMin),
-			King:           args.King,
-		},
-		notFound, nil
+	return series, x, overallMax, overallMin
 }
