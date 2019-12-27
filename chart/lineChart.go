@@ -58,11 +58,30 @@ type LineChartSource struct {
 // Make returns a byte array encoded as an image containing the chart
 // and a filename for the image.
 func (src LineChartSource) Make() ([]byte, string) {
-	// Give a 10% buffer at the top to the highest value
-	// Round to the second-highest digit (i.e. 10000 rounds to nearest 1000)
-	rangeMax := util.Round(src.Max*1.10, math.Pow10(int(math.Floor(math.Log10(src.Max))-1)))
+	// Bit of a weird metric here.
+	// The rangeMax's "point" is to give a bit of buffer at the top
+	// for the title. However, if the difference between the low and
+	// high is small but the max and min are large, it will create a
+	// buffer far in excess of the graph's range. (This is most
+	// noticeable when looking at subtracted ranges and why this exists.)
+	// Here's a contrived example:
+	// 440 |                      TITLE AND STUFF
+	// 435 |           [EMPTY SPACE THAT SHOULDN'T BE HERE]
+	// 430 |           [EMPTY SPACE THAT SHOULDN'T BE HERE]
+	// 425 |           [EMPTY SPACE THAT SHOULDN'T BE HERE]
+	// 420 | +++++++     ++++++++           ++++       ++++++++++++
+	// 415 |        +++++        ++     ++++    +    ++
+	// 420 |                       +++++         ++++
+	//     --------------------------------------------------------
+	// This results in far too small of a graph with a very compressed range.
+	// All this is to say: *think VERY carefully before changing this.*
+	if src.Max*0.1 > (src.Max-src.Min)*10 {
+		// Give a 10% buffer at the top to the highest value
+		// Round to the second-highest digit (i.e. 10000 rounds to nearest 1000)
+		rangeMax := util.Round(src.Max*1.10, math.Pow10(int(math.Floor(math.Log10(src.Max))-1)))
 
-	src.Max = rangeMax
+		src.Max = rangeMax
+	}
 
 	graph := chart.Chart{
 		DPI:    GlobalChartConfig.DPI,
@@ -129,9 +148,9 @@ func (src LineChartSource) Make() ([]byte, string) {
 	}
 
 	if src.LogScale {
-		graph.YAxis.Range = &LogRange{Min: src.Min, Max: rangeMax}
+		graph.YAxis.Range = &LogRange{Min: src.Min, Max: src.Max}
 	} else {
-		graph.YAxis.Range = &chart.ContinuousRange{Min: src.Min, Max: rangeMax}
+		graph.YAxis.Range = &chart.ContinuousRange{Min: src.Min, Max: src.Max}
 	}
 
 	if src.ShowMilestones {

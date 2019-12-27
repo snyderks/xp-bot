@@ -1,5 +1,7 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/akamensky/argparse v1.1.0 h1:ltDglRW6Bjpcd7NyPt8B3aLHELzKmapHgF0JVARe4Xc=
+github.com/akamensky/argparse v1.1.0/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
 github.com/blend/go-sdk v2.0.0+incompatible h1:FL9X/of4ZYO5D2JJNI4vHrbXPfuSDbUa7h8JP9+E92w=
 github.com/blend/go-sdk v2.0.0+incompatible/go.mod h1:3GUb0YsHFNTJ6hsJTpzdmCUl05o8HisKjx5OAlzYKdw=
 github.com/bwmarrin/discordgo v0.17.0 h1:VUZc9ppGi0j9xKsRBYctJqFEFl8u0FSMzDBObw705cM=

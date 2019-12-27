@@ -14,6 +14,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
+
+	"github.com/akamensky/argparse"
 )
 
 var (
@@ -25,6 +27,7 @@ var (
 	prefix             = "g!"
 	topSwitch          = []string{"top", "t"}
 	usersSwitch        = []string{"users", "u", "user", "us"}
+	subSwitch          = []string{"sub", "s", "subtraction", "cmp", "compare", "c"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
 	pup                = "king"
 	usage              = "`g! top [number] last [days]`"
@@ -35,9 +38,15 @@ var (
 // Args represents the returned arguments for the command.
 type Args struct {
 	Usernames []string
+	Sub       bool
 	Top       int
 	Days      int
 	King      bool
+}
+
+// CreateParser returns a parser that handles the commands for the graph bot.
+func CreateParser() *argparse.Parser {
+	return argparse.NewParser("print", "Prints provided string to stdout")
 }
 
 // MessageCreate will be called every time a new message is created.
@@ -99,7 +108,11 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Need to do usernames instead.
 	if args.Usernames != nil {
-		img, path, err = makeUserComparisonGraph(&args)
+		if args.Sub == true {
+			img, path, err = makeUserSubtractionGraph(&args)
+		} else {
+			img, path, err = makeUserComparisonGraph(&args)
+		}
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
@@ -127,9 +140,9 @@ func ParseGraphArgs(s string) (Args, error) {
 	if len(splitted) > 10 {
 		return Args{}, errors.New("")
 	}
-	if len(splitted) == 1 {
+	if len(splitted) <= 1 {
 		// No args. Return the default.
-		return Args{nil, 10, 0, false}, nil
+		return Args{nil, false, 10, 0, false}, nil
 	}
 	args := Args{}
 
@@ -137,10 +150,17 @@ func ParseGraphArgs(s string) (Args, error) {
 	splitted = splitted[1:]
 
 	// Check for pup
-	if splitted[len(splitted)-1] == pup {
+	if splitted[0] == pup {
 		args.King = true
 		// Remove pup if he's there
-		splitted = splitted[0 : len(splitted)-2]
+		// If statement here is to avoid over-indexing
+		// and simply empty the array if "king" is the
+		// last thing in the splitted string.
+		if len(splitted) > 1 {
+			splitted = splitted[1:]
+		} else {
+			splitted = []string{}
+		}
 	}
 
 	if len(splitted) == 0 {
@@ -167,6 +187,17 @@ func ParseGraphArgs(s string) (Args, error) {
 			}
 			names := util.StripUsernames(splitted[1:])
 			return Args{Usernames: names}, nil
+		}
+	}
+
+	for _, x := range subSwitch {
+		if splitted[0] == x {
+			if len(splitted) == 1 {
+				return Args{},
+					errors.New("please pass at least one username as the argument to subtract")
+			}
+			names := util.StripUsernames(splitted[1:])
+			return Args{Sub: true, Usernames: names}, nil
 		}
 	}
 
@@ -259,6 +290,31 @@ func makeUserComparisonGraph(args *Args) (img []byte, path string, err error) {
 	}
 
 	src, _, err := UserLineChart(&c, args)
+	if err != nil {
+		logger.Log.Error("Failed to construct chart:", err.Error())
+		return nil, "", err
+	}
+
+	img, path = src.Make()
+
+	return img, path, nil
+}
+
+func makeUserSubtractionGraph(args *Args) (img []byte, path string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Error("Recovered in makeUserSubtractionGraph", r)
+			err = errors.New("something went wrong when generating the graph")
+		}
+	}()
+
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database:", err.Error())
+		return nil, "", err
+	}
+
+	src, _, err := SubLineChart(&c, args)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err

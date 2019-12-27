@@ -3,6 +3,7 @@ module github.com/snyderks/xp-bot
 go 1.13
 
 require (
+	github.com/akamensky/argparse v1.1.0
 	github.com/blend/go-sdk v2.0.0+incompatible // indirect
 	github.com/bwmarrin/discordgo v0.17.0
 	github.com/go-stack/stack v1.8.0 // indirect

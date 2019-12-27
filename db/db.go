@@ -137,7 +137,7 @@ func (db *DB) AddDay(people map[string]Person) error {
 			result.People = append(result.People, v)
 		}
 		// Want to make sure we have the max and min available.
-		max, min := util.MaxMin(ranks)
+		max, min := util.MaxMinInt(ranks)
 
 		if max != -1 && max > result.MaxRank {
 			result.MaxRank = max
@@ -161,7 +161,7 @@ func (db *DB) AddDay(people map[string]Person) error {
 			peopleList = append(peopleList, v)
 		}
 		// Want to make sure we have the max and min available.
-		max, min := util.MaxMin(ranks)
+		max, min := util.MaxMinInt(ranks)
 		newRecord := Day{
 			Date:    time.Now(),
 			People:  peopleList,

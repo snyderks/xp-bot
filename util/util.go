@@ -5,8 +5,25 @@ import (
 	"time"
 )
 
-// MaxMin returns the (max, min) of an array of ints.
-func MaxMin(arr []int) (int, int) {
+// MaxMinFloat returns the (max, min) of an array of ints.
+func MaxMinInt(arr []int) (int, int) {
+	if len(arr) == 0 {
+		return -1, -1
+	}
+	max := arr[0]
+	min := arr[0]
+	for _, v := range arr {
+		if v > max {
+			max = v
+		} else if v < min {
+			min = v
+		}
+	}
+	return max, min
+}
+
+// MaxMinFloat returns the (max, min) of an array of floats.
+func MaxMinFloat(arr []float64) (float64, float64) {
 	if len(arr) == 0 {
 		return -1, -1
 	}
