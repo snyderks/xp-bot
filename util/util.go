@@ -2,6 +2,7 @@ package util
 
 import (
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -73,4 +74,23 @@ func StripUsernames(arr []string) []string {
 // 1 rounds to ones, 0.01 rounds to hundredths, 100 rounds to hundreds, etc.
 func Round(x, unit float64) float64 {
 	return float64(int64(x/unit+0.5)) * unit
+}
+
+// StringChecker checks whether a string matches any string in a slice.
+// Set caseInsensitive to true to check strings with case-insensitivity;
+// otherwise set it to false.
+func StringChecker(s string, checkAgainst []string, caseInsensitive bool) bool {
+	for _, el := range checkAgainst {
+		if caseInsensitive {
+			// EqualFold takes care of cases.
+			if strings.EqualFold(s, el) {
+				return true
+			}
+		} else {
+			if s == el {
+				return true
+			}
+		}
+	}
+	return false
 }

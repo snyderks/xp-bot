@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -29,8 +28,9 @@ var (
 	usersSwitch        = []string{"users", "u", "user", "us"}
 	subSwitch          = []string{"sub", "s", "subtraction", "cmp", "compare", "c"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
+	helpSwitch         = []string{"help", "h", "ahh", "?"}
 	pup                = "king"
-	usage              = "`g! top [number] last [days]`"
+	usage              = "`g! help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
 	tatsu              = "172002275412279296"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
@@ -138,7 +138,7 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 func ParseGraphArgs(s string) (Args, error) {
 	splitted := strings.Split(s, " ")
 	if len(splitted) > 10 {
-		return Args{}, errors.New("")
+		return Args{}, errors.New("you entered too many users or too long of a command. Please try again")
 	}
 	if len(splitted) <= 1 {
 		// No args. Return the default.
@@ -149,105 +149,91 @@ func ParseGraphArgs(s string) (Args, error) {
 	// Only stuff after the g!
 	splitted = splitted[1:]
 
-	// Check for pup
-	if splitted[0] == pup {
-		args.King = true
-		// Remove pup if he's there
-		// If statement here is to avoid over-indexing
-		// and simply empty the array if "king" is the
-		// last thing in the splitted string.
-		if len(splitted) > 1 {
-			splitted = splitted[1:]
-		} else {
-			splitted = []string{}
-		}
-	}
-
+	// Default check
 	if len(splitted) == 0 {
-		// All done. Return default again!
 		args.Top = 10
 		return args, nil
 	}
 
-	// Check if they specified top.
-	args, err := topCheck(args, splitted)
+	// Big if-else time.
+	// Structure of the parser is as follows:
+	// 1. Check for the top-level command, whatever it may be.
+	// 2. Enter a function that will either return the arguments to be passed or an error.
+	// 3. Return that function *or* an error if necessary.
 
-	if err != nil {
-		return Args{}, err
+	// Declared here for readability.
+	startingArg := splitted[0]
+	caseInsensitive := true
+	if util.StringChecker(startingArg, topSwitch, caseInsensitive) {
+		// We have a top request.
+		return parseTop(splitted)
+	} else if util.StringChecker(startingArg, helpSwitch, caseInsensitive) {
+		// Help request
+		return Args{}, errors.New(usage)
+	} else if util.StringChecker(startingArg, lastSwitch, caseInsensitive) {
+		// We have a last request.
+		return parseLast(splitted)
+	} else if util.StringChecker(startingArg, usersSwitch, caseInsensitive) {
+		// Users request.
+		return parseUsers(splitted)
+	} else if util.StringChecker(startingArg, subSwitch, caseInsensitive) {
+		// Comparison request.
+		return parseSub(splitted)
 	}
 
-	// Check if they specified last X days.
-	args, err = lastCheck(args, splitted)
-
-	for _, x := range usersSwitch {
-		if splitted[0] == x {
-			if len(splitted) == 1 {
-				return Args{},
-					errors.New("please pass at least one username as the argument to users")
-			}
-			names := util.StripUsernames(splitted[1:])
-			return Args{Usernames: names}, nil
-		}
-	}
-
-	for _, x := range subSwitch {
-		if splitted[0] == x {
-			if len(splitted) == 1 {
-				return Args{},
-					errors.New("please pass at least one username as the argument to subtract")
-			}
-			names := util.StripUsernames(splitted[1:])
-			return Args{Sub: true, Usernames: names}, nil
-		}
-	}
-
-	if err != nil {
-		return Args{}, errors.New("your command wasn't recognized")
-	}
-	return args, nil
+	return Args{}, errors.New("your command wasn't recognized")
 }
 
-func topCheck(args Args, splitted []string) (Args, error) {
-	// Now we check for top.
-	for _, x := range topSwitch {
-		if len(splitted) >= 2 && splitted[0] == x {
-			top, err := strconv.Atoi(splitted[1])
-			if err != nil {
-				return Args{},
-					errors.New("please pass a number as the argument to top")
-			}
-
-			args.Top = top
-			return args, nil
+func parseTop(splitted []string) (Args, error) {
+	// Determine if we have a number here
+	if len(splitted) > 1 {
+		topNum, err := strconv.Atoi(splitted[1])
+		if err != nil && topNum > 0 {
+			return Args{}, errors.New("please type a whole number after g! top")
 		}
+		return Args{Top: topNum}, nil
 	}
-	return args, nil
+	// Default
+	return Args{Top: 10}, nil
 }
 
-func lastCheck(args Args, splitted []string) (Args, error) {
-	// Check for last x days
-	if len(splitted) >= 4 {
-		for _, x := range lastSwitch {
-			if splitted[2] == x {
-				last, err := strconv.Atoi(splitted[3])
-				if err != nil {
-					return Args{},
-						errors.New("please pass a number as the argument to last")
-				}
-				if last >= chart.GlobalChartConfig.DaysLimit {
-					return Args{},
-						errors.New("too many days requested. Please request fewer days")
-				}
-				if last <= 0 {
-					return Args{},
-						errors.New("nice try")
-				}
-				args.Days = last
-				return args, nil
-			}
+func parseLast(splitted []string) (Args, error) {
+	// Determine if we have a number here
+	if len(splitted) > 1 {
+		lastNum, err := strconv.Atoi(splitted[1])
+		if err != nil && lastNum > 0 {
+			return Args{}, errors.New("please type a whole number after g! last")
 		}
+		return Args{Days: lastNum, Top: 10}, nil
 	}
-	return args, nil
+	// Default
+	return Args{Days: 365, Top: 10}, nil
+}
+
+func parseUsers(splitted []string) (Args, error) {
+	if len(splitted) > 1 {
+		args := Args{Usernames: make([]string, 0)}
+		for _, user := range splitted[1:] {
+			args.Usernames = append(args.Usernames, user)
+		}
+		args.Usernames = util.StripUsernames(args.Usernames)
+		return args, nil
+	}
+	// Default error
+	return Args{}, errors.New("You must pass at least one user to g! users")
+}
+
+func parseSub(splitted []string) (Args, error) {
+	if len(splitted) > 1 && len(splitted) < 4 {
+		args := Args{Usernames: make([]string, 0), Sub: true}
+		for _, user := range splitted[1:] {
+			args.Usernames = append(args.Usernames, user)
+		}
+		args.Usernames = util.StripUsernames(args.Usernames)
+		return args, nil
+	}
+	// Default
+	return Args{}, errors.New("You must pass two users to g! compare")
 }
 
 func makeRankGraph(args *Args) (img []byte, path string, err error) {

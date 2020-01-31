@@ -33,12 +33,12 @@ func TestParseGraphArgs(t *testing.T) {
 		}
 	})
 
-	t.Run("g! king", func(t *testing.T) {
-		args, err := ParseGraphArgs("g! king")
-		expected := Args{Top: 10, King: true}
+	// t.Run("g! king", func(t *testing.T) {
+	// 	args, err := ParseGraphArgs("g! king")
+	// 	expected := Args{Top: 10, King: true}
 
-		if !reflect.DeepEqual(args, expected) {
-			t.Errorf("Got %v,\nexpected %v.\nError: %s", args, expected, err.Error())
-		}
-	})
+	// 	if !reflect.DeepEqual(args, expected) {
+	// 		t.Errorf("Got %v,\nexpected %v.\nError: %s", args, expected, err.Error())
+	// 	}
+	// })
 }
