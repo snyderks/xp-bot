@@ -31,7 +31,7 @@ var (
 	lastSwitch         = []string{"last", "l", "days", "d"}
 	pup                = "king"
 	usage              = "`g! top [number] last [days]`"
-	tatsu              = "Tatsumaki"
+	tatsu              = "172002275412279296"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
 
@@ -59,7 +59,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		serveGraph(s, m)
-	} else if /*m.Author.Username == "Crouton"*/ m.Author.Username == tatsu &&
+	} else if /*m.Author.Username == "Crouton"*/ m.Author.ID == tatsu &&
 		m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
 		parseNewEntry(s, m)
 	}
