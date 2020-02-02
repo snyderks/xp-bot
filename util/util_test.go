@@ -2,10 +2,20 @@ package util
 
 import "testing"
 
-func TestMaxMin(t *testing.T) {
+func TestMaxMinInt(t *testing.T) {
 	arr := []int{7, 12, 1, 5, 8, 12, 9, 6}
 
-	max, min := MaxMin(arr)
+	max, min := MaxMinInt(arr)
+
+	if max != 12 || min != 1 {
+		t.Fail()
+	}
+}
+
+func TestMaxMinFloat(t *testing.T) {
+	arr := []float64{7, 12, 1, 5, 8, 12, 9, 6}
+
+	max, min := MaxMinFloat(arr)
 
 	if max != 12 || min != 1 {
 		t.Fail()

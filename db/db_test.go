@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/snyderks/xp-bot/primitives"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
@@ -42,7 +43,7 @@ func TestGetPeople(t *testing.T) {
 }
 
 func TestAddDay(t *testing.T) {
-	people := map[string]Person{"ode": Person{UName: "ode", XP: 5, Rank: 1}}
+	people := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1}}
 	client, _ := CreateDB(testURI)
 
 	// Add a record that should just add and work.
@@ -62,14 +63,14 @@ func TestAddDay(t *testing.T) {
 		t.Error("Retrieved record mismatch. Expected", people, "got", result)
 	}
 
-	people2 := map[string]Person{"ode": Person{UName: "ode", XP: 5, Rank: 1},
-		"croot": Person{UName: "croot", XP: 2, Rank: 2}}
+	people2 := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1},
+		"croot": primitives.Person{UName: "croot", XP: 2, Rank: 2}}
 
 	client.AddDay(people2)
 
 	// Reassigning here because AddDay scribbles all over people2.
-	people2 = map[string]Person{"ode": Person{UName: "ode", XP: 5, Rank: 1},
-		"croot": Person{UName: "croot", XP: 2, Rank: 2}}
+	people2 = map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1},
+		"croot": primitives.Person{UName: "croot", XP: 2, Rank: 2}}
 	if err != nil {
 		t.Error("Failed to add the record.", err.Error())
 	}
@@ -94,7 +95,7 @@ func TestAddDay(t *testing.T) {
 }
 
 func TestAddPerson(t *testing.T) {
-	person := map[string]Person{"ode": Person{UName: "ode", XP: 5, Rank: 1}}
+	person := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1}}
 
 	client, _ := CreateDB(testURI)
 

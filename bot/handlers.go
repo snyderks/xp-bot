@@ -7,13 +7,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
+
+	"github.com/akamensky/argparse"
 )
 
 var (
@@ -25,19 +28,29 @@ var (
 	prefix             = "g!"
 	topSwitch          = []string{"top", "t"}
 	usersSwitch        = []string{"users", "u", "user", "us"}
+	subSwitch          = []string{"sub", "s", "subtraction", "cmp", "compare", "c"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
+	helpSwitch         = []string{"help", "h", "ahh", "?"}
+	statsSwitch        = []string{"stats", "stat"}
 	pup                = "king"
-	usage              = "`g! top [number] last [days]`"
-	tatsu              = "Tatsumaki"
+	usage              = "`g! help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
+	tatsu              = "172002275412279296"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
 
 // Args represents the returned arguments for the command.
 type Args struct {
 	Usernames []string
+	Sub       bool
+	Stats     bool
 	Top       int
 	Days      int
 	King      bool
+}
+
+// CreateParser returns a parser that handles the commands for the graph bot.
+func CreateParser() *argparse.Parser {
+	return argparse.NewParser("print", "Prints provided string to stdout")
 }
 
 // MessageCreate will be called every time a new message is created.
@@ -50,7 +63,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		serveGraph(s, m)
-	} else if /*m.Author.Username == "Crouton"*/ m.Author.Username == tatsu &&
+	} else if /*m.Author.Username == "Crouton"*/ m.Author.ID == tatsu &&
 		m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
 		parseNewEntry(s, m)
 	}
@@ -89,8 +102,16 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(
 			m.ChannelID,
 			fmt.Sprintf(
-				"Your command wasn't recognized. The correct usage is: %s\nError: %s",
-				usage, err.Error()))
+				"Your command wasn't recognized. \nThe correct usage is: %s",
+				usage))
+		return
+	}
+
+	// For now, putting this here.
+	// TODO: pull out the ParseGraphArgs above into the calling function
+	// and make this called from there as well.
+	if args.Stats {
+		sendStatsMessage(s, m, args)
 		return
 	}
 
@@ -99,7 +120,11 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Need to do usernames instead.
 	if args.Usernames != nil {
-		img, path, err = makeUserComparisonGraph(&args)
+		if args.Sub == true {
+			img, path, err = makeUserSubtractionGraph(&args)
+		} else {
+			img, path, err = makeUserComparisonGraph(&args)
+		}
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
@@ -120,103 +145,220 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Args) {
+	// Get the XP for the person.
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database:", err.Error())
+		s.ChannelMessageSend(m.ChannelID,
+			"Failed to create the stats lookup. "+
+				"(Something is probs wrong with the DB.)")
+		return
+	}
+
+	fmt.Println(args)
+	// Looking to get lots of time.
+	notFound, people, err := c.ReadPeople(args.Usernames, 365)
+
+	if err != nil {
+		logger.Log.Error("Couldn't get the people for some reason:",
+			err.Error())
+		s.ChannelMessageSend(m.ChannelID, "Failed to create the stats lookup. "+
+			"(Something is probs wrong with the DB.)")
+		return
+	}
+
+	if len(notFound) != 0 || len(people) == 0 {
+		s.ChannelMessageSend(m.ChannelID, "This user does not exist. "+
+			"Did you use the nickname (without @), not their username?")
+		return
+	}
+
+	weeklyXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 7, MonthsAgoEnd: 0, DaysAgoEnd: 0}, people[0])
+	var weeklyStat string
+	if err != nil {
+		weeklyStat = "Not enough data"
+	} else {
+		weeklyStat = fmt.Sprintf("%d XP", int(weeklyXP))
+	}
+
+	prevWeekXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 14, MonthsAgoEnd: 0, DaysAgoEnd: 7}, people[0])
+	if err != nil && prevWeekXP > 0 {
+		weeklyStat = strings.Join([]string{weeklyStat, fmt.Sprintf("%.f%% from previous week",
+			float64(weeklyXP-prevWeekXP)/float64(prevWeekXP))}, " ")
+	}
+
+	monthlyXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 1, DaysAgoStart: 0, MonthsAgoEnd: 0, DaysAgoEnd: 0}, people[0])
+	var monthlyStat string
+	if err != nil {
+		monthlyStat = "Not enough data"
+	} else {
+		monthlyStat = fmt.Sprintf("%d XP", int(monthlyXP))
+	}
+
+	currentXP := people[0].History[len(people[0].History)-1].XP
+
+	fmt.Println(weeklyXP, monthlyXP, currentXP)
+
+	nextTier, err := NextXPTier(currentXP, chart.GlobalChartConfig.Milestones)
+	var nextTierMsg string
+	var nextTierDate string
+	if err != nil {
+		nextTierMsg = "You're already at the highest tier!"
+		nextTierDate = "None"
+	} else {
+		d, err := ExpectedDate(currentXP, nextTier.XP, int(weeklyXP))
+		nextTierMsg = fmt.Sprintf("%s %d", nextTier.Name, nextTier.XP)
+		if err != nil {
+			nextTierDate = "We don't have enough data to determine this."
+		} else {
+			nextTierDate = d.Format("January 2, 2006")
+		}
+	}
+
+	s.ChannelMessageSendEmbed(m.ChannelID,
+		&discordgo.MessageEmbed{Author: &discordgo.MessageEmbedAuthor{},
+			Color: 0x2222ff,
+			Title: fmt.Sprintf("Stats for %s", people[0].UName),
+			Fields: []*discordgo.MessageEmbedField{
+				&discordgo.MessageEmbedField{
+					Name:   "Average XP last week",
+					Value:  weeklyStat,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Average XP last month",
+					Value:  monthlyStat,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Next XP tier",
+					Value:  nextTierMsg,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Estimated date to reach next tier",
+					Value:  nextTierDate,
+					Inline: true,
+				},
+			},
+			Timestamp: time.Now().Format(time.RFC3339),
+		},
+	)
+}
+
 // ParseGraphArgs attempts to extract the graph arguments from a string.
 // Returns only user-friendly errors.
 func ParseGraphArgs(s string) (Args, error) {
 	splitted := strings.Split(s, " ")
 	if len(splitted) > 10 {
-		return Args{}, errors.New("")
+		return Args{}, errors.New("you entered too many users or too long of a command. Please try again")
 	}
-	if len(splitted) == 1 {
+	if len(splitted) <= 1 {
 		// No args. Return the default.
-		return Args{nil, 10, 0, false}, nil
+		return Args{nil, false, false, 10, 0, false}, nil
 	}
 	args := Args{}
 
 	// Only stuff after the g!
 	splitted = splitted[1:]
 
-	// Check for pup
-	if splitted[len(splitted)-1] == pup {
-		args.King = true
-		// Remove pup if he's there
-		splitted = splitted[0 : len(splitted)-2]
-	}
-
+	// Default check
 	if len(splitted) == 0 {
-		// All done. Return default again!
 		args.Top = 10
 		return args, nil
 	}
 
-	// Check if they specified top.
-	args, err := topCheck(args, splitted)
+	// Big if-else time.
+	// Structure of the parser is as follows:
+	// 1. Check for the top-level command, whatever it may be.
+	// 2. Enter a function that will either return the arguments to be passed or an error.
+	// 3. Return that function *or* an error if necessary.
 
-	if err != nil {
-		return Args{}, err
+	// Declared here for readability.
+	startingArg := splitted[0]
+	caseInsensitive := true
+	if util.StringChecker(startingArg, topSwitch, caseInsensitive) {
+		// We have a top request.
+		return parseTop(splitted)
+	} else if util.StringChecker(startingArg, helpSwitch, caseInsensitive) {
+		// Help request
+		return Args{}, errors.New(usage)
+	} else if util.StringChecker(startingArg, lastSwitch, caseInsensitive) {
+		// We have a last request.
+		return parseLast(splitted)
+	} else if util.StringChecker(startingArg, usersSwitch, caseInsensitive) {
+		// Users request.
+		return parseUsers(splitted)
+	} else if util.StringChecker(startingArg, subSwitch, caseInsensitive) {
+		// Comparison request.
+		return parseSub(splitted)
+	} else if util.StringChecker(startingArg, statsSwitch, caseInsensitive) {
+		// Stats request.
+		return parseStats(splitted)
 	}
 
-	// Check if they specified last X days.
-	args, err = lastCheck(args, splitted)
-
-	for _, x := range usersSwitch {
-		if splitted[0] == x {
-			if len(splitted) == 1 {
-				return Args{},
-					errors.New("please pass at least one username as the argument to users")
-			}
-			names := util.StripUsernames(splitted[1:])
-			return Args{Usernames: names}, nil
-		}
-	}
-
-	if err != nil {
-		return Args{}, errors.New("your command wasn't recognized")
-	}
-	return args, nil
+	return Args{}, errors.New("your command wasn't recognized")
 }
 
-func topCheck(args Args, splitted []string) (Args, error) {
-	// Now we check for top.
-	for _, x := range topSwitch {
-		if len(splitted) >= 2 && splitted[0] == x {
-			top, err := strconv.Atoi(splitted[1])
-			if err != nil {
-				return Args{},
-					errors.New("please pass a number as the argument to top")
-			}
-
-			args.Top = top
-			return args, nil
+func parseTop(splitted []string) (Args, error) {
+	// Determine if we have a number here
+	if len(splitted) > 1 {
+		topNum, err := strconv.Atoi(splitted[1])
+		if err != nil && topNum > 0 {
+			return Args{}, errors.New("please type a whole number after g! top")
 		}
+		return Args{Top: topNum}, nil
 	}
-	return args, nil
+	// Default
+	return Args{Top: 10}, nil
 }
 
-func lastCheck(args Args, splitted []string) (Args, error) {
-	// Check for last x days
-	if len(splitted) >= 4 {
-		for _, x := range lastSwitch {
-			if splitted[2] == x {
-				last, err := strconv.Atoi(splitted[3])
-				if err != nil {
-					return Args{},
-						errors.New("please pass a number as the argument to last")
-				}
-				if last >= chart.GlobalChartConfig.DaysLimit {
-					return Args{},
-						errors.New("too many days requested. Please request fewer days")
-				}
-				if last <= 0 {
-					return Args{},
-						errors.New("nice try")
-				}
-				args.Days = last
-				return args, nil
-			}
+func parseLast(splitted []string) (Args, error) {
+	// Determine if we have a number here
+	if len(splitted) > 1 {
+		lastNum, err := strconv.Atoi(splitted[1])
+		if err != nil && lastNum > 0 {
+			return Args{}, errors.New("please type a whole number after g! last")
 		}
+		return Args{Days: lastNum, Top: 10}, nil
 	}
-	return args, nil
+	// Default
+	return Args{Days: 365, Top: 10}, nil
+}
+
+func parseUsers(splitted []string) (Args, error) {
+	if len(splitted) > 1 {
+		args := Args{Usernames: make([]string, 0)}
+		for _, user := range splitted[1:] {
+			args.Usernames = append(args.Usernames, user)
+		}
+		args.Usernames = util.StripUsernames(args.Usernames)
+		return args, nil
+	}
+	// Default error
+	return Args{}, errors.New("You must pass at least one user to g! users")
+}
+
+func parseSub(splitted []string) (Args, error) {
+	if len(splitted) > 1 && len(splitted) < 4 {
+		args := Args{Usernames: make([]string, 0), Sub: true}
+		for _, user := range splitted[1:] {
+			args.Usernames = append(args.Usernames, user)
+		}
+		args.Usernames = util.StripUsernames(args.Usernames)
+		return args, nil
+	}
+	// Default
+	return Args{}, errors.New("You must pass two users to g! compare")
+}
+
+func parseStats(splitted []string) (Args, error) {
+	if len(splitted) > 1 {
+		return Args{Usernames: util.StripUsernames([]string{splitted[1]}), Stats: true}, nil
+	}
+	// Default error
+	return Args{}, errors.New("You must pass a username to g! stats")
 }
 
 func makeRankGraph(args *Args) (img []byte, path string, err error) {
@@ -259,6 +401,31 @@ func makeUserComparisonGraph(args *Args) (img []byte, path string, err error) {
 	}
 
 	src, _, err := UserLineChart(&c, args)
+	if err != nil {
+		logger.Log.Error("Failed to construct chart:", err.Error())
+		return nil, "", err
+	}
+
+	img, path = src.Make()
+
+	return img, path, nil
+}
+
+func makeUserSubtractionGraph(args *Args) (img []byte, path string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Error("Recovered in makeUserSubtractionGraph", r)
+			err = errors.New("something went wrong when generating the graph")
+		}
+	}()
+
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database:", err.Error())
+		return nil, "", err
+	}
+
+	src, _, err := SubLineChart(&c, args)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err

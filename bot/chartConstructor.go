@@ -11,6 +11,7 @@ import (
 	"github.com/snyderks/xp-bot/db"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
+	"github.com/snyderks/xp-bot/primitives"
 )
 
 // NeedMoreRecordsError is an error type designed to be returned to the user.
@@ -113,10 +114,97 @@ func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 		notFound, nil
 }
 
+// SubLineChart retrieves records to construct a line chart with one user's
+// XP subtracted from another user.
+// Returns an error if a user wasn't found or if a generic error occurs.
+func SubLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+	// Get XP history for each person
+	// Replace property on args with default if necessary
+	if args.Days == 0 {
+		args.Days = chart.GlobalChartConfig.DaysLimit
+	}
+	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
+		args.Days)
+
+	if err != nil {
+		return chart.LineChartSource{}, nil,
+			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
+	}
+
+	series, x, _, _ := constructSeries(xpHistories)
+
+	// No more than two users compared.
+	if len(series) > 0 {
+		series = series[0:2]
+	}
+
+	series, err = subtractor(series)
+
+	logger.Log.Info("Retrieved people. Failed to retrieve: ", notFound)
+
+	if notFound != nil && len(notFound) > 0 {
+		return chart.LineChartSource{}, notFound, errors.New("failed to retrieve all users")
+	}
+
+	max, min := util.MaxMinFloat(series[0])
+
+	fmt.Println(max, min)
+
+	return chart.LineChartSource{
+			X:      x,
+			Series: series,
+			Labels: []string{fmt.Sprintf("Comparison of %s",
+				strings.Join(args.Usernames, ", "))},
+			Title: fmt.Sprintf("Comparison of %s",
+				strings.Join(args.Usernames, ", ")),
+			LogScale:       false,
+			ShowMilestones: true,
+			Max:            max,
+			Min:            min,
+			King:           args.King,
+		},
+		notFound, nil
+}
+
+// subtractor takes two float series and subtracts the larger one's values
+// from the smaller. The larger is determined by examining the last value
+// in each series, with the greater value being the larger series.
+func subtractor(series [][]float64) ([][]float64, error) {
+	var large int
+	var small int
+	out := make([][]float64, 1)
+
+	if len(series) != 2 {
+		return out, errors.New("only two users are allowed")
+	}
+
+	if len(series[0]) != len(series[1]) {
+		return out, errors.New("series must be the same length")
+	}
+
+	// Determine which is smaller and larger
+	// Refer to them by their indices
+	if series[0][len(series[0])-1] > series[1][len(series[1])-1] {
+		large = 0
+		small = 1
+	} else {
+		large = 1
+		small = 0
+	}
+
+	out[0] = make([]float64, len(series[0]))
+
+	for i := 0; i < len(series[0]); i++ {
+		out[0][i] = series[large][i] - series[small][i]
+	}
+
+	return out, nil
+}
+
 // constructSeries creates a full set of points from a list of sparse arrays,
 // replicating values in the sparse arrays by aligning the time values within them.
 // returns the
-func constructSeries(xpHistories []db.HistoryRange) (series [][]float64,
+func constructSeries(xpHistories []primitives.HistoryRange) (series [][]float64,
 	x []time.Time, overallMin int, overallMax int) {
 	series = make([][]float64, len(xpHistories))
 	x = make([]time.Time, 0)
