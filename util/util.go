@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/snyderks/xp-bot/primitive"
+	"github.com/snyderks/xp-bot/primitives"
 )
 
 // MaxMinInt returns the (max, min) of an array of ints.
@@ -60,7 +60,7 @@ func Min(arr []time.Time) (time.Time, int) {
 }
 
 // Avg returns the average delta between two XPs.
-func Avg(hi, lo primitive.History) float64 {
+func Avg(hi, lo primitives.History) float64 {
 	return float64(hi.XP-lo.XP) / (float64(hi.Date.Sub(lo.Date).Hours()) / 24.0)
 }
 
