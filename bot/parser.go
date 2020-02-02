@@ -5,12 +5,12 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/snyderks/xp-bot/db"
+	"github.com/snyderks/xp-bot/primitives"
 )
 
 // Parse takes in a string representation of the leaderboard
 // and returns a list of the XP for each user.
-func Parse(s string) (map[string]db.Person, error) {
+func Parse(s string) (map[string]primitives.Person, error) {
 	parseExp := regexp.MustCompile(`(\[)(\d+)(\].+)(#)(.+)([.\n\r\s]*)(Total Score: )(\d+)`)
 
 	// Find all the results (-1 tells it never to stop)
@@ -20,7 +20,7 @@ func Parse(s string) (map[string]db.Person, error) {
 		return nil, errors.New("no matches for the parser. Input was not of the correct format")
 	}
 
-	counts := make(map[string]db.Person, len(matches))
+	counts := make(map[string]primitives.Person, len(matches))
 
 	for _, m := range matches {
 		xp, err := strconv.Atoi(m[8])
@@ -32,7 +32,7 @@ func Parse(s string) (map[string]db.Person, error) {
 			return nil, errors.New("a rank could not be converted to a number")
 		}
 
-		counts[m[5]] = db.Person{UName: m[5], XP: xp, Rank: rank}
+		counts[m[5]] = primitives.Person{UName: m[5], XP: xp, Rank: rank}
 	}
 
 	return counts, nil

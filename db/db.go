@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/snyderks/xp-bot/logger"
+	"github.com/snyderks/xp-bot/primitives"
 	"github.com/snyderks/xp-bot/util"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,43 +27,13 @@ type DB struct {
 	Days   *mongo.Collection
 }
 
-// History is a record of a user's XP at a given moment.
-type History struct {
-	ID    primitive.ObjectID `bson:"_id,omitempty"`
-	UName string             `bson:"name"`
-	XP    int                `bson:"xp"`
-	Date  time.Time          `bson:"date"`
-}
-
-// Day is the structure of the documents in the Days collection.
-type Day struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty"`
-	Date    time.Time          `bson:"date"`
-	People  People             `bson:"people"`
-	MaxRank int                `bson:"maxRank"`
-	MinRank int                `bson:"minRank"`
-}
-
-// Person is the XP for a given uname.
-type Person struct {
-	UName string `bson:"name"`
-	XP    int    `bson:"xp"`
-	Rank  int    `bson:"rank"`
-}
-
-// HistoryRange is a list of moments of a user's XP.
-type HistoryRange struct {
-	History []History
-	UName   string
-}
-
 type result struct {
 	date time.Time
 	xp   int
 }
 
 // People is an array of Person
-type People []Person
+type People []primitives.Person
 
 func (x People) Len() int           { return len(x) }
 func (x People) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
@@ -94,7 +64,7 @@ func CreateDB(URI string) (DB, error) {
 }
 
 // AddDay inserts a new record to track the top XP members for a day.
-func (db *DB) AddDay(people map[string]Person) error {
+func (db *DB) AddDay(people map[string]primitives.Person) error {
 	result, err := db.ReadNewestDay()
 
 	if err != nil &&
@@ -153,7 +123,7 @@ func (db *DB) AddDay(people map[string]Person) error {
 		logger.Log.Info("Updating day with ID", result.ID)
 		db.Days.UpdateOne(ctx, bson.M{"_id": result.ID}, bson.M{"$set": result})
 	} else {
-		peopleList := make([]Person, 0)
+		peopleList := make([]primitives.Person, 0)
 		ranks := make([]int, 0)
 		// Hoist the people out of a map and into a list.
 		for _, v := range people {
@@ -162,7 +132,7 @@ func (db *DB) AddDay(people map[string]Person) error {
 		}
 		// Want to make sure we have the max and min available.
 		max, min := util.MaxMinInt(ranks)
-		newRecord := Day{
+		newRecord := primitives.Day{
 			Date:    time.Now(),
 			People:  peopleList,
 			MaxRank: max,
@@ -180,19 +150,19 @@ func (db *DB) AddDay(people map[string]Person) error {
 }
 
 // ReadNewestDay returns an array of the results for the given day and the date.
-func (db *DB) ReadNewestDay() (Day, error) {
+func (db *DB) ReadNewestDay() (primitives.Day, error) {
 	ctx, cancel := transactionCTX()
 	defer cancel()
 
 	opts := options.FindOne().SetSort(bson.M{"date": -1})
 
-	var result Day
+	var result primitives.Day
 
 	b := db.Days.FindOne(ctx, bson.D{}, opts)
 	err := b.Decode(&result)
 
 	if err != nil {
-		return Day{}, err
+		return primitives.Day{}, err
 	}
 
 	return result, nil
@@ -203,13 +173,13 @@ func (db *DB) ReadNewestDay() (Day, error) {
 // variable. Errors from this function are not user-friendly.
 // This function is designed to succeed even with partial failure.
 func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
-	people []HistoryRange, err error) {
+	people []primitives.HistoryRange, err error) {
 	ctx, cancel := transactionCTX()
 	defer cancel()
 
 	notFound = make([]string, 0)
 
-	people = make([]HistoryRange, 0)
+	people = make([]primitives.HistoryRange, 0)
 	opts := options.Find().SetSort(bson.M{"date": 1})
 
 	for _, uname := range unames {
@@ -221,27 +191,27 @@ func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
 		if err != nil {
 			return nil, nil, err
 		}
-		person := make([]History, 0)
+		person := make([]primitives.History, 0)
 		err = cursor.All(ctx, &person)
 		if len(person) == 0 {
 			notFound = append(notFound, uname)
 		} else {
-			people = append(people, HistoryRange{History: person, UName: uname})
+			people = append(people, primitives.HistoryRange{History: person, UName: uname})
 		}
 	}
 	return notFound, people, nil
 }
 
-func (db *DB) readMostRecentPerson(uname string) (History, error) {
+func (db *DB) readMostRecentPerson(uname string) (primitives.History, error) {
 	ctx, cancel := transactionCTX()
 	defer cancel()
 
 	opts := options.FindOne().SetSort(bson.M{"date": -1})
-	result := History{}
+	result := primitives.History{}
 
 	err := db.People.FindOne(ctx, bson.M{"name": uname}, opts).Decode(&result)
 	if err != nil {
-		return History{}, err
+		return primitives.History{}, err
 	}
 
 	return result, nil
@@ -251,7 +221,7 @@ func (db *DB) readMostRecentPerson(uname string) (History, error) {
 // Populate the Person map with the string being the username.
 // Not guaranteed to be (and not currently!) represented the
 // same in the database.
-func (db *DB) AddPeople(people map[string]Person) error {
+func (db *DB) AddPeople(people map[string]primitives.Person) error {
 	ctx, cancel := transactionCTX()
 	defer cancel()
 
@@ -262,14 +232,14 @@ func (db *DB) AddPeople(people map[string]Person) error {
 		// or the result was more than minutesBeforeNewRecord
 		// old, so we make a new one.
 		if err != nil || farEnoughInPast(result.Date) {
-			result = History{UName: k, XP: v.XP, Date: t}
+			result = primitives.History{UName: k, XP: v.XP, Date: t}
 			logger.Log.Info("Adding person:", result)
 			_, err = db.People.InsertOne(ctx, result)
 			if err != nil {
 				return err
 			}
 		} else {
-			result = History{ID: result.ID, UName: result.UName, XP: v.XP, Date: result.Date}
+			result = primitives.History{ID: result.ID, UName: result.UName, XP: v.XP, Date: result.Date}
 			logger.Log.Info("Updating person with ID", result.ID)
 			_, err = db.People.UpdateOne(ctx, bson.M{"_id": result.ID}, bson.M{"$set": result})
 			if err != nil {

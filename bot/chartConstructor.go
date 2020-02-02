@@ -11,6 +11,7 @@ import (
 	"github.com/snyderks/xp-bot/db"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
+	"github.com/snyderks/xp-bot/primitives"
 )
 
 // NeedMoreRecordsError is an error type designed to be returned to the user.
@@ -203,7 +204,7 @@ func subtractor(series [][]float64) ([][]float64, error) {
 // constructSeries creates a full set of points from a list of sparse arrays,
 // replicating values in the sparse arrays by aligning the time values within them.
 // returns the
-func constructSeries(xpHistories []db.HistoryRange) (series [][]float64,
+func constructSeries(xpHistories []primitives.HistoryRange) (series [][]float64,
 	x []time.Time, overallMin int, overallMax int) {
 	series = make([][]float64, len(xpHistories))
 	x = make([]time.Time, 0)

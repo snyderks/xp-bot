@@ -7,10 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/snyderks/xp-bot/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/logger"
 	"github.com/snyderks/xp-bot/util"
 
@@ -29,6 +31,7 @@ var (
 	subSwitch          = []string{"sub", "s", "subtraction", "cmp", "compare", "c"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
 	helpSwitch         = []string{"help", "h", "ahh", "?"}
+	statsSwitch        = []string{"stats", "stat"}
 	pup                = "king"
 	usage              = "`g! help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
 	tatsu              = "172002275412279296"
@@ -39,6 +42,7 @@ var (
 type Args struct {
 	Usernames []string
 	Sub       bool
+	Stats     bool
 	Top       int
 	Days      int
 	King      bool
@@ -98,8 +102,16 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(
 			m.ChannelID,
 			fmt.Sprintf(
-				"Your command wasn't recognized. The correct usage is: %s\nError: %s",
-				usage, err.Error()))
+				"Your command wasn't recognized. \nThe correct usage is: %s",
+				usage))
+		return
+	}
+
+	// For now, putting this here.
+	// TODO: pull out the ParseGraphArgs above into the calling function
+	// and make this called from there as well.
+	if args.Stats {
+		sendStatsMessage(s, m, args)
 		return
 	}
 
@@ -133,6 +145,108 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Args) {
+	// Get the XP for the person.
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database:", err.Error())
+		s.ChannelMessageSend(m.ChannelID,
+			"Failed to create the stats lookup. "+
+				"(Something is probs wrong with the DB.)")
+		return
+	}
+
+	fmt.Println(args)
+	// Looking to get lots of time.
+	notFound, people, err := c.ReadPeople(args.Usernames, 365)
+
+	if err != nil {
+		logger.Log.Error("Couldn't get the people for some reason:",
+			err.Error())
+		s.ChannelMessageSend(m.ChannelID, "Failed to create the stats lookup. "+
+			"(Something is probs wrong with the DB.)")
+		return
+	}
+
+	if len(notFound) != 0 || len(people) == 0 {
+		s.ChannelMessageSend(m.ChannelID, "This user does not exist. "+
+			"Did you use the nickname (without @), not their username?")
+		return
+	}
+
+	weeklyXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 7, MonthsAgoEnd: 0, DaysAgoEnd: 0}, people[0])
+	var weeklyStat string
+	if err != nil {
+		weeklyStat = "Not enough data"
+	} else {
+		weeklyStat = fmt.Sprintf("%d XP", int(weeklyXP))
+	}
+
+	prevWeekXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 14, MonthsAgoEnd: 0, DaysAgoEnd: 7}, people[0])
+	if err != nil && prevWeekXP > 0 {
+		weeklyStat = strings.Join([]string{weeklyStat, fmt.Sprintf("%.f%% from previous week",
+			float64(weeklyXP-prevWeekXP)/float64(prevWeekXP))}, " ")
+	}
+
+	monthlyXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 1, DaysAgoStart: 0, MonthsAgoEnd: 0, DaysAgoEnd: 0}, people[0])
+	var monthlyStat string
+	if err != nil {
+		monthlyStat = "Not enough data"
+	} else {
+		monthlyStat = fmt.Sprintf("%d XP", int(monthlyXP))
+	}
+
+	currentXP := people[0].History[len(people[0].History)-1].XP
+
+	fmt.Println(weeklyXP, monthlyXP, currentXP)
+
+	nextTier, err := NextXPTier(currentXP, chart.GlobalChartConfig.Milestones)
+	var nextTierMsg string
+	var nextTierDate string
+	if err != nil {
+		nextTierMsg = "You're already at the highest tier!"
+		nextTierDate = "None"
+	} else {
+		d, err := ExpectedDate(currentXP, nextTier.XP, int(weeklyXP))
+		nextTierMsg = fmt.Sprintf("%s %d", nextTier.Name, nextTier.XP)
+		if err != nil {
+			nextTierDate = "We don't have enough data to determine this."
+		} else {
+			nextTierDate = d.Format("January 2, 2006")
+		}
+	}
+
+	s.ChannelMessageSendEmbed(m.ChannelID,
+		&discordgo.MessageEmbed{Author: &discordgo.MessageEmbedAuthor{},
+			Color: 0x2222ff,
+			Title: fmt.Sprintf("Stats for %s", people[0].UName),
+			Fields: []*discordgo.MessageEmbedField{
+				&discordgo.MessageEmbedField{
+					Name:   "Average XP last week",
+					Value:  weeklyStat,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Average XP last month",
+					Value:  monthlyStat,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Next XP tier",
+					Value:  nextTierMsg,
+					Inline: true,
+				},
+				&discordgo.MessageEmbedField{
+					Name:   "Estimated date to reach next tier",
+					Value:  nextTierDate,
+					Inline: true,
+				},
+			},
+			Timestamp: time.Now().Format(time.RFC3339),
+		},
+	)
+}
+
 // ParseGraphArgs attempts to extract the graph arguments from a string.
 // Returns only user-friendly errors.
 func ParseGraphArgs(s string) (Args, error) {
@@ -142,7 +256,7 @@ func ParseGraphArgs(s string) (Args, error) {
 	}
 	if len(splitted) <= 1 {
 		// No args. Return the default.
-		return Args{nil, false, 10, 0, false}, nil
+		return Args{nil, false, false, 10, 0, false}, nil
 	}
 	args := Args{}
 
@@ -179,6 +293,9 @@ func ParseGraphArgs(s string) (Args, error) {
 	} else if util.StringChecker(startingArg, subSwitch, caseInsensitive) {
 		// Comparison request.
 		return parseSub(splitted)
+	} else if util.StringChecker(startingArg, statsSwitch, caseInsensitive) {
+		// Stats request.
+		return parseStats(splitted)
 	}
 
 	return Args{}, errors.New("your command wasn't recognized")
@@ -234,6 +351,14 @@ func parseSub(splitted []string) (Args, error) {
 	}
 	// Default
 	return Args{}, errors.New("You must pass two users to g! compare")
+}
+
+func parseStats(splitted []string) (Args, error) {
+	if len(splitted) > 1 {
+		return Args{Usernames: util.StripUsernames([]string{splitted[1]}), Stats: true}, nil
+	}
+	// Default error
+	return Args{}, errors.New("You must pass a username to g! stats")
 }
 
 func makeRankGraph(args *Args) (img []byte, path string, err error) {

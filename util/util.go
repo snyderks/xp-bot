@@ -4,9 +4,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/snyderks/xp-bot/primitive"
 )
 
-// MaxMinFloat returns the (max, min) of an array of ints.
+// MaxMinInt returns the (max, min) of an array of ints.
 func MaxMinInt(arr []int) (int, int) {
 	if len(arr) == 0 {
 		return -1, -1
@@ -57,6 +59,11 @@ func Min(arr []time.Time) (time.Time, int) {
 	return min, minIdx
 }
 
+// Avg returns the average delta between two XPs.
+func Avg(hi, lo primitive.History) float64 {
+	return float64(hi.XP-lo.XP) / (float64(hi.Date.Sub(lo.Date).Hours()) / 24.0)
+}
+
 // StripUsernames removes @ and #XXXX from usernames
 // passed in, returning the results.
 func StripUsernames(arr []string) []string {
@@ -93,4 +100,11 @@ func StringChecker(s string, checkAgainst []string, caseInsensitive bool) bool {
 		}
 	}
 	return false
+}
+
+// Between returns whether a given time is between start and end.
+// If start and end are equal and/or end comes before start,
+// it will always return false.
+func Between(start, end, check *time.Time) bool {
+	return check.After(*start) && check.Before(*end)
 }
