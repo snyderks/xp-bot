@@ -183,7 +183,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	}
 
 	prevWeekXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 14, MonthsAgoEnd: 0, DaysAgoEnd: 7}, people[0])
-	if err != nil && prevWeekXP > 0 {
+	if err == nil && prevWeekXP > 0 {
 		weeklyStat = strings.Join([]string{weeklyStat, fmt.Sprintf("%.f%% from previous week",
 			float64(weeklyXP-prevWeekXP)/float64(prevWeekXP))}, " ")
 	}
