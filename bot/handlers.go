@@ -33,7 +33,7 @@ var (
 	helpSwitch         = []string{"help", "h", "ahh", "?"}
 	statsSwitch        = []string{"stats", "stat"}
 	pup                = "king"
-	usage              = "`g! help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
+	usage              = "`g!help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
 	tatsu              = "172002275412279296"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
@@ -156,7 +156,6 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 		return
 	}
 
-	fmt.Println(args)
 	// Looking to get lots of time.
 	notFound, people, err := c.ReadPeople(args.Usernames, 365)
 
@@ -184,8 +183,17 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 
 	prevWeekXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 14, MonthsAgoEnd: 0, DaysAgoEnd: 7}, people[0])
 	if err == nil && prevWeekXP > 0 {
-		weeklyStat = strings.Join([]string{weeklyStat, fmt.Sprintf("%.f%% from previous week",
-			float64(weeklyXP-prevWeekXP)/float64(prevWeekXP))}, " ")
+		percentChange := float64(weeklyXP-prevWeekXP) / float64(prevWeekXP) * 100
+		prefix := ""
+		if percentChange > 0 {
+			prefix = "+"
+		} else if percentChange == 0 {
+			prefix = "±"
+		}
+		weeklyStat = fmt.Sprintf("**%s\n%s%.2f%%** from previous week's daily XP",
+			weeklyStat, prefix, percentChange)
+	} else if err != nil {
+		logger.Log.Error("Failed to construct prevWeekXP", err.Error())
 	}
 
 	monthlyXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 1, DaysAgoStart: 0, MonthsAgoEnd: 0, DaysAgoEnd: 0}, people[0])
@@ -197,8 +205,6 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	}
 
 	currentXP := people[0].History[len(people[0].History)-1].XP
-
-	fmt.Println(weeklyXP, monthlyXP, currentXP)
 
 	nextTier, err := NextXPTier(currentXP, chart.GlobalChartConfig.Milestones)
 	var nextTierMsg string
@@ -218,7 +224,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 
 	s.ChannelMessageSendEmbed(m.ChannelID,
 		&discordgo.MessageEmbed{Author: &discordgo.MessageEmbedAuthor{},
-			Color: 0x2222ff,
+			Color: 0x4444ff,
 			Title: fmt.Sprintf("Stats for %s", people[0].UName),
 			Fields: []*discordgo.MessageEmbedField{
 				&discordgo.MessageEmbedField{
@@ -251,6 +257,13 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 // Returns only user-friendly errors.
 func ParseGraphArgs(s string) (Args, error) {
 	splitted := strings.Split(s, " ")
+
+	// Allow for g!command as well.
+	if splitted[0] != "g!" && len(splitted[0]) > 2 {
+		splitted[0] = splitted[0][2:]
+		splitted = append([]string{"g!"}, splitted...)
+	}
+
 	if len(splitted) > 10 {
 		return Args{}, errors.New("you entered too many users or too long of a command. Please try again")
 	}

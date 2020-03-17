@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/snyderks/xp-bot/chart"
-	"github.com/snyderks/xp-bot/util"
 	"github.com/snyderks/xp-bot/primitives"
+	"github.com/snyderks/xp-bot/util"
 )
 
 // TimeRange defines a start and end interval in months and days.

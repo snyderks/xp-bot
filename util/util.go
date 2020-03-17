@@ -106,5 +106,6 @@ func StringChecker(s string, checkAgainst []string, caseInsensitive bool) bool {
 // If start and end are equal and/or end comes before start,
 // it will always return false.
 func Between(start, end, check *time.Time) bool {
-	return check.After(*start) && check.Before(*end)
+	return check.After(*start) && check.Before(*end) ||
+		check.Equal(*start) || check.Equal(*end)
 }
