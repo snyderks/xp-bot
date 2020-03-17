@@ -1,3 +1,3 @@
 # XP Bot
 
-XP bot is a Discord bot and webserver that scrapes Tatsumaki ranks each day, stores the results in a Google sheet, and registers itself on a server with the command `!graph` to generate the graph.
+XP bot is a Discord bot scrapes Tatsumaki ranks when run, stores the results, and registers itself on a server with the command `!g` to generate the graph.
