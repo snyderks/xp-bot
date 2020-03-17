@@ -3,7 +3,7 @@ ode = "f1c40f"
 Crouton = "b925ee"
 Pupper = "35bb3e"
 theBeef = "3682fa"
-dylwalk = "e96a00"
+dylwalk = "61acd6"
 Sirobot = "e91e63"
 Washingdone = "f7cac9"
 KyroZed = "009473"
@@ -24,10 +24,14 @@ width = 2000
 dpi = 300
 tickNum = 10
 milestones = [
-    {name = "Talkative", xp = 2500},
-    {name = "Regular", xp = 5000},
-    {name = "Veteran", xp = 15000},
-    {name = "Distinguished", xp = 50000},
-    {name = "Exquisite", xp = 100000},
-    {name = "Celestial", xp = 200000},
+    {name = "Novice", xp = 2000},
+    {name = "Apprentice", xp = 4000},
+    {name = "Established", xp = 8000},
+    {name = "Seasoned", xp = 16000},
+    {name = "Distinguished", xp = 32000},
+    {name = "Eminent", xp = 64000},
+    {name = "Mythic", xp = 128000},
+    {name = "Transcendent", xp = 256000},
+    {name = "Celestial", xp = 512000},
+    {name = "Empyreal", xp = 1024000}
 ]
