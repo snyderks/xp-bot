@@ -29,4 +29,5 @@ milestones = [
     {name = "Veteran", xp = 15000},
     {name = "Distinguished", xp = 50000},
     {name = "Exquisite", xp = 100000},
+    {name = "Celestial", xp = 200000},
 ]

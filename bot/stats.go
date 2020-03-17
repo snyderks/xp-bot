@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/snyderks/xp-bot/chart"
-	"github.com/snyderks/xp-bot/db"
 	"github.com/snyderks/xp-bot/util"
 	"github.com/snyderks/xp-bot/primitives"
 )

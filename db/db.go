@@ -32,13 +32,6 @@ type result struct {
 	xp   int
 }
 
-// People is an array of Person
-type People []primitives.Person
-
-func (x People) Len() int           { return len(x) }
-func (x People) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
-func (x People) Less(i, j int) bool { return x[i].Rank < x[j].Rank }
-
 // farEnoughInPast returns whether a time t is far enough in the past
 // to create a new record in the DB instead of simply updating.
 func farEnoughInPast(t time.Time) bool {

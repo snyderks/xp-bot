@@ -3,8 +3,15 @@ package primitives
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/primitive"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// People is an array of Person
+type People []Person
+
+func (x People) Len() int           { return len(x) }
+func (x People) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x People) Less(i, j int) bool { return x[i].Rank < x[j].Rank }
 
 // History is a record of a user's XP at a given moment.
 type History struct {

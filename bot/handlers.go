@@ -179,11 +179,11 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	if err != nil {
 		weeklyStat = "Not enough data"
 	} else {
-		weeklyStat = fmt.Sprintf("%d XP", int(weeklyXP))
+		weeklyStat = fmt.Sprintf("%d XP/day", int(weeklyXP))
 	}
 
 	prevWeekXP, err := AverageForTimeRange(TimeRange{MonthsAgoStart: 0, DaysAgoStart: 14, MonthsAgoEnd: 0, DaysAgoEnd: 7}, people[0])
-	if err != nil && prevWeekXP > 0 {
+	if err == nil && prevWeekXP > 0 {
 		weeklyStat = strings.Join([]string{weeklyStat, fmt.Sprintf("%.f%% from previous week",
 			float64(weeklyXP-prevWeekXP)/float64(prevWeekXP))}, " ")
 	}
@@ -193,7 +193,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	if err != nil {
 		monthlyStat = "Not enough data"
 	} else {
-		monthlyStat = fmt.Sprintf("%d XP", int(monthlyXP))
+		monthlyStat = fmt.Sprintf("%d XP/day", int(monthlyXP))
 	}
 
 	currentXP := people[0].History[len(people[0].History)-1].XP
@@ -208,7 +208,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 		nextTierDate = "None"
 	} else {
 		d, err := ExpectedDate(currentXP, nextTier.XP, int(weeklyXP))
-		nextTierMsg = fmt.Sprintf("%s %d", nextTier.Name, nextTier.XP)
+		nextTierMsg = fmt.Sprintf("%s: %d XP", nextTier.Name, nextTier.XP)
 		if err != nil {
 			nextTierDate = "We don't have enough data to determine this."
 		} else {
