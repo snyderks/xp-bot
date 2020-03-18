@@ -10,8 +10,8 @@ import (
 	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/db"
 	"github.com/snyderks/xp-bot/logger"
-	"github.com/snyderks/xp-bot/util"
 	"github.com/snyderks/xp-bot/primitives"
+	"github.com/snyderks/xp-bot/util"
 )
 
 // NeedMoreRecordsError is an error type designed to be returned to the user.
@@ -158,7 +158,7 @@ func SubLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error)
 			Title: fmt.Sprintf("Comparison of %s",
 				strings.Join(args.Usernames, ", ")),
 			LogScale:       false,
-			ShowMilestones: true,
+			ShowMilestones: false,
 			Max:            max,
 			Min:            min,
 			King:           args.King,

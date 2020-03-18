@@ -153,6 +153,22 @@ func (src LineChartSource) Make() ([]byte, string) {
 		graph.YAxis.Range = &chart.ContinuousRange{Min: src.Min, Max: src.Max}
 	}
 
+	// Need a zero line.
+	if src.Min <= 0 {
+		line := &HorizontalLineSeries{
+			Style: chart.Style{
+				HiddenOnLegend: true,
+				StrokeColor:    chart.ColorLightGray,
+				FontSize:       GlobalChartConfig.AxesFontSize,
+			},
+			Name:        "Equal",
+			InnerSeries: firstSeries,
+			Value:       0.0,
+		}
+		series = append(series, line)
+		series = append(series, LastValueLabeledAnnotationSeries(line, line.Name))
+	}
+
 	if src.ShowMilestones {
 		for _, ms := range GlobalChartConfig.Milestones {
 			if float64(ms.XP) < src.Max && float64(ms.XP) > src.Min {
