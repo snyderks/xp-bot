@@ -439,6 +439,8 @@ func makeUserSubtractionGraph(args *Args) (img []byte, path string, err error) {
 	}
 
 	src, _, err := SubLineChart(&c, args)
+	// No milestones on this graph.
+	src.ShowMilestones = false
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err
