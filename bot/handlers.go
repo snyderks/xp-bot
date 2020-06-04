@@ -30,10 +30,10 @@ var (
 	usersSwitch        = []string{"users", "u", "user", "us"}
 	subSwitch          = []string{"sub", "s", "subtraction", "cmp", "compare", "c"}
 	lastSwitch         = []string{"last", "l", "days", "d"}
-	helpSwitch         = []string{"help", "h", "ahh", "?"}
+	helpSwitch         = []string{"help", "h", "ahh", "?", "usage"}
 	statsSwitch        = []string{"stats", "stat"}
 	pup                = "king"
-	usage              = "`g!help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
+	usage              = "`g! help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
 	tatsu              = "172002275412279296"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
@@ -46,6 +46,7 @@ type Args struct {
 	Top       int
 	Days      int
 	King      bool
+	Help      bool
 }
 
 // CreateParser returns a parser that handles the commands for the graph bot.
@@ -107,6 +108,11 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	if args.Help {
+		s.ChannelMessageSend(m.ChannelID, usage)
+		return
+	}
+
 	// For now, putting this here.
 	// TODO: pull out the ParseGraphArgs above into the calling function
 	// and make this called from there as well.
@@ -154,6 +160,10 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 			"Failed to create the stats lookup. "+
 				"(Something is probs wrong with the DB.)")
 		return
+	}
+
+	if args.Usernames == nil {
+		args.Usernames = []string{m.Author.Username}
 	}
 
 	// Looking to get lots of time.
@@ -269,7 +279,16 @@ func ParseGraphArgs(s string) (Args, error) {
 	}
 	if len(splitted) <= 1 {
 		// No args. Return the default.
-		return Args{nil, false, false, 10, 0, false}, nil
+		return Args{
+				Usernames: nil,
+				Sub:       false,
+				Stats:     false,
+				Top:       10,
+				Days:      0,
+				King:      false,
+				Help:      false,
+			},
+			nil
 	}
 	args := Args{}
 
@@ -296,7 +315,7 @@ func ParseGraphArgs(s string) (Args, error) {
 		return parseTop(splitted)
 	} else if util.StringChecker(startingArg, helpSwitch, caseInsensitive) {
 		// Help request
-		return Args{}, errors.New(usage)
+		return Args{Help: true}, nil
 	} else if util.StringChecker(startingArg, lastSwitch, caseInsensitive) {
 		// We have a last request.
 		return parseLast(splitted)
@@ -369,9 +388,11 @@ func parseSub(splitted []string) (Args, error) {
 func parseStats(splitted []string) (Args, error) {
 	if len(splitted) > 1 {
 		return Args{Usernames: util.StripUsernames([]string{splitted[1]}), Stats: true}, nil
+	} else if len(splitted) == 1 {
+		return Args{Usernames: nil, Stats: true}, nil
 	}
 	// Default error
-	return Args{}, errors.New("You must pass a username to g! stats")
+	return Args{}, errors.New("You called g! stats incorrectly")
 }
 
 func makeRankGraph(args *Args) (img []byte, path string, err error) {
