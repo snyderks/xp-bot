@@ -32,7 +32,7 @@ func Parse(s string) (map[string]primitives.Person, error) {
 			return nil, errors.New("a rank could not be converted to a number")
 		}
 
-		counts[m[5]] = primitives.Person{UName: m[5], XP: xp, Rank: rank}
+		counts[m[5]] = primitives.Person{UserID: m[5], XP: xp, Rank: rank}
 	}
 
 	return counts, nil

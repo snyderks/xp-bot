@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/snyderks/xp-bot/chart"
 	"github.com/snyderks/xp-bot/db"
 	"github.com/snyderks/xp-bot/logger"
@@ -28,7 +29,7 @@ fixing the following usernames:`
 // and returns the source and a list of usernames that couldn't be retrieved.
 // Returns an error if the most recent day doesn't contain all the required
 // records or if a generic error occurred.
-func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+func RankLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
 	day, err := c.ReadNewestDay()
 	if err != nil {
 		return chart.LineChartSource{}, nil, errors.New(fmt.Sprint("failed to retrieve day", err.Error()))
@@ -44,7 +45,7 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 		if i == args.Top {
 			break
 		}
-		people = append(people, p.UName)
+		people = append(people, p.UserID)
 	}
 
 	// Get XP history for each person
@@ -57,9 +58,18 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 
 	series, x, overallMax, overallMin := constructSeries(xpHistories)
 
+	// Replace list of user IDs with usernames
+	names, err := GetNicknames(people, s)
+
 	if err != nil {
 		return chart.LineChartSource{}, nil,
 			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
+	}
+
+	// Pull out the names (make sure they're in the right order)
+	namesExtracted := make([]string, len(people))
+	for i, p := range people {
+		namesExtracted[i] = names[p]
 	}
 
 	logger.Log.Info("Retrieved people. Failed to retrieve: ", notFound)
@@ -67,7 +77,7 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	return chart.LineChartSource{
 			X:              x,
 			Series:         series,
-			Labels:         people,
+			Labels:         namesExtracted,
 			Title:          chart.GlobalChartConfig.RankChartTitle,
 			LogScale:       true,
 			ShowMilestones: true,
@@ -81,7 +91,7 @@ func RankLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 // UserLineChart retrieves records to construct a line chart of the users specified
 // and returns the source and a list of usernames that couldn't be retrieved.
 // Returns an error if a user wasn't found or if a generic error occurs.
-func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+func UserLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
 	// Get XP history for each person
 	// Replace property on args with default if necessary
 	if args.Days == 0 {
@@ -90,9 +100,18 @@ func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
 		args.Days)
 
+	// Replace list of user IDs with usernames
+	names, err := GetNicknames(args.Usernames, s)
+
 	if err != nil {
 		return chart.LineChartSource{}, nil,
 			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
+	}
+
+	// Pull out the names (make sure they're in the right order)
+	namesExtracted := make([]string, len(args.Usernames))
+	for i, p := range args.Usernames {
+		namesExtracted[i] = names[p]
 	}
 
 	series, x, overallMax, overallMin := constructSeries(xpHistories)
@@ -102,9 +121,9 @@ func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 	return chart.LineChartSource{
 			X:      x,
 			Series: series,
-			Labels: args.Usernames,
+			Labels: namesExtracted,
 			Title: fmt.Sprintf("Comparison of %s",
-				strings.Join(args.Usernames, ", ")),
+				strings.Join(namesExtracted, ", ")),
 			LogScale:       false,
 			ShowMilestones: true,
 			Max:            float64(overallMax),
@@ -117,7 +136,7 @@ func UserLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error
 // SubLineChart retrieves records to construct a line chart with one user's
 // XP subtracted from another user.
 // Returns an error if a user wasn't found or if a generic error occurs.
-func SubLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error) {
+func SubLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
 	// Get XP history for each person
 	// Replace property on args with default if necessary
 	if args.Days == 0 {
@@ -126,9 +145,18 @@ func SubLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error)
 	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
 		args.Days)
 
+	// Replace list of user IDs with usernames
+	names, err := GetNicknames(args.Usernames, s)
+
 	if err != nil {
 		return chart.LineChartSource{}, nil,
 			errors.New(fmt.Sprint(FailedToRetrievePeopleError, strings.Join(notFound, ",")))
+	}
+
+	// Pull out the names (make sure they're in the right order)
+	namesExtracted := make([]string, len(args.Usernames))
+	for i, p := range args.Usernames {
+		namesExtracted[i] = names[p]
 	}
 
 	series, x, _, _ := constructSeries(xpHistories)
@@ -154,9 +182,9 @@ func SubLineChart(c *db.DB, args *Args) (chart.LineChartSource, []string, error)
 			X:      x,
 			Series: series,
 			Labels: []string{fmt.Sprintf("Comparison of %s",
-				strings.Join(args.Usernames, ", "))},
+				strings.Join(namesExtracted, ", "))},
 			Title: fmt.Sprintf("Comparison of %s",
-				strings.Join(args.Usernames, ", ")),
+				strings.Join(namesExtracted, ", ")),
 			LogScale:       false,
 			ShowMilestones: false,
 			Max:            max,

@@ -1,6 +1,6 @@
 module github.com/snyderks/xp-bot
 
-go 1.13
+go 1.15
 
 require (
 	github.com/akamensky/argparse v1.1.0

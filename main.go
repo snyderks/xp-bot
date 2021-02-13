@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/snyderks/xp-bot/bot"
@@ -13,11 +15,28 @@ import (
 
 // Variables used for command line parameters
 var (
-	Token string
+	Token          string
+	UpdateInterval int
 )
 
 func init() {
 	Token = os.Getenv("XP_BOT_TOKEN")
+	i, err := strconv.Atoi(os.Getenv("XP_BOT_UPDATE_INT_MIN"))
+	if err != nil {
+		fmt.Println("Couldn't find XP_BOT_UPDATE_INT_MIN")
+		UpdateInterval = 17
+	}
+	UpdateInterval = i
+}
+
+func regularUpdateDB() {
+	ticker := time.NewTicker(time.Duration(UpdateInterval) * time.Minute)
+	for range ticker.C {
+		err := bot.AppendRankings()
+		if err != nil {
+			logger.Log.Error("regularUpdateDB failed...", err.Error())
+		}
+	}
 }
 
 func main() {
@@ -40,6 +59,9 @@ func main() {
 		logger.Log.Fatal("Error opening Discord connection,", err.Error())
 		return
 	}
+
+	// Set up automatic updater for rankings. Dies with the rest of the app.
+	go regularUpdateDB()
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")

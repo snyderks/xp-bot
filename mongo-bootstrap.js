@@ -7,7 +7,9 @@ db = new Mongo().getDB("xp-bot")
 // Create our collections
 db.createCollection("days")
 db.createCollection("people")
+db.createCollection("nicknames")
 
 db.days.createIndex({ date: -1 }, { name: "date" })
 db.people.createIndex({ date: -1 }, { name: "date" })
-db.people.createIndex({ name: 1 }, { name: "name" })
+db.people.createIndex({ userid: 1 }, { name: "userid" })
+db.nicknames.createIndex({ userid: 1 }, { name: "userid" })

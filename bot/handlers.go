@@ -32,9 +32,12 @@ var (
 	lastSwitch         = []string{"last", "l", "days", "d"}
 	helpSwitch         = []string{"help", "h", "ahh", "?"}
 	statsSwitch        = []string{"stats", "stat"}
+	manualUpdate       = []string{"update"}
 	pup                = "king"
 	usage              = "`g!help | top [number] | last [days] | compare [user 1, user 2] | users [usernames]`"
 	tatsu              = "172002275412279296"
+	guildID            = "99199781900910592"
+	croot              = "99201752280096768"
 	leaderboardTrigger = "Guild Score Leaderboards"
 )
 
@@ -46,6 +49,7 @@ type Args struct {
 	Top       int
 	Days      int
 	King      bool
+	Update    bool
 }
 
 // CreateParser returns a parser that handles the commands for the graph bot.
@@ -63,10 +67,46 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		serveGraph(s, m)
-	} else if /*m.Author.Username == "Crouton"*/ m.Author.ID == tatsu &&
-		m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
-		parseNewEntry(s, m)
 	}
+	// else if /*m.Author.Username == "Crouton"*/ m.Author.ID == tatsu &&
+	// 	m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
+	// 	parseNewEntry(s, m)
+	// }
+}
+
+// AppendRankings retrieves current server rankings and places them in the DB.
+func AppendRankings() error {
+	ranks, err := GetRankings(guildID)
+	if err != nil {
+		logger.Log.Error("Couldn't get new rankings: ", err.Error())
+		return err
+	}
+
+	c, err := db.CreateDB(DBURI)
+	if err != nil {
+		logger.Log.Error("Couldn't connect to database: ", err.Error())
+		return err
+	}
+
+	peopleMap, err := RankingsToPeople(ranks)
+	if err != nil {
+		logger.Log.Error("Conversion failed: ", err.Error())
+		return err
+	}
+
+	err = c.AddDay(peopleMap)
+	if err != nil {
+		logger.Log.Error("DB insert failed: ", err.Error())
+		return err
+	}
+
+	err = c.AddPeople(peopleMap)
+	if err != nil {
+		logger.Log.Error("DB insert failed: ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func parseNewEntry(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -97,13 +137,18 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// It's a request for the bot to serve a graph up.
 	logger.Log.Info("Handler matched on graph request. ",
 		" channel: ", m.ChannelID, " sent by: ", m.Author, " content: ", m.Content)
-	args, err := ParseGraphArgs(m.Content)
+	args, err := ParseGraphArgs(m.Content, m.Author.ID)
 	if err != nil {
 		s.ChannelMessageSend(
 			m.ChannelID,
 			fmt.Sprintf(
 				"Your command wasn't recognized. \nThe correct usage is: %s",
 				usage))
+		return
+	}
+
+	if args.Update {
+		AppendRankings()
 		return
 	}
 
@@ -121,16 +166,16 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Need to do usernames instead.
 	if args.Usernames != nil {
 		if args.Sub == true {
-			img, path, err = makeUserSubtractionGraph(&args)
+			img, path, err = makeUserSubtractionGraph(&args, s)
 		} else {
-			img, path, err = makeUserComparisonGraph(&args)
+			img, path, err = makeUserComparisonGraph(&args, s)
 		}
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 	} else {
-		img, path, err = makeRankGraph(&args)
+		img, path, err = makeRankGraph(&args, s)
 		if err != nil {
 			if strings.Contains(err.Error(), NeedMoreRecordsError) {
 				s.ChannelMessageSend(m.ChannelID, NeedMoreRecordsError)
@@ -167,9 +212,18 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 		return
 	}
 
+	names, err := GetNicknames(args.Usernames, s)
+	if err != nil {
+		logger.Log.Error("One or more people didn't exist at all.",
+			err.Error())
+		s.ChannelMessageSend(m.ChannelID,
+			"One or more users do not exist. Did you @ the user?")
+		return
+	}
+
 	if len(notFound) != 0 || len(people) == 0 {
-		s.ChannelMessageSend(m.ChannelID, "This user does not exist. "+
-			"Did you use the nickname (without @), not their username?")
+		s.ChannelMessageSend(m.ChannelID, "This user does not exist on this server. "+
+			"Did you @ the user?")
 		return
 	}
 
@@ -225,7 +279,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	s.ChannelMessageSendEmbed(m.ChannelID,
 		&discordgo.MessageEmbed{Author: &discordgo.MessageEmbedAuthor{},
 			Color: 0x4444ff,
-			Title: fmt.Sprintf("Stats for %s", people[0].UName),
+			Title: fmt.Sprintf("Stats for %s", names[people[0].UserID]),
 			Fields: []*discordgo.MessageEmbedField{
 				&discordgo.MessageEmbedField{
 					Name:   "Average XP last week",
@@ -255,7 +309,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 
 // ParseGraphArgs attempts to extract the graph arguments from a string.
 // Returns only user-friendly errors.
-func ParseGraphArgs(s string) (Args, error) {
+func ParseGraphArgs(s string, senderID string) (Args, error) {
 	splitted := strings.Split(s, " ")
 
 	// Allow for g!command as well.
@@ -269,7 +323,7 @@ func ParseGraphArgs(s string) (Args, error) {
 	}
 	if len(splitted) <= 1 {
 		// No args. Return the default.
-		return Args{nil, false, false, 10, 0, false}, nil
+		return Args{nil, false, false, 10, 0, false, false}, nil
 	}
 	args := Args{}
 
@@ -309,6 +363,9 @@ func ParseGraphArgs(s string) (Args, error) {
 	} else if util.StringChecker(startingArg, statsSwitch, caseInsensitive) {
 		// Stats request.
 		return parseStats(splitted)
+	} else if util.StringChecker(startingArg, manualUpdate, caseInsensitive) && senderID == croot {
+		// Manual update
+		return Args{Update: true}, nil
 	}
 
 	return Args{}, errors.New("your command wasn't recognized")
@@ -344,6 +401,8 @@ func parseUsers(splitted []string) (Args, error) {
 	if len(splitted) > 1 {
 		args := Args{Usernames: make([]string, 0)}
 		for _, user := range splitted[1:] {
+			// @ed users have the following format: <@!USER_ID>.
+			// Therefore, take the 4th character to the 2nd to last.
 			args.Usernames = append(args.Usernames, user)
 		}
 		args.Usernames = util.StripUsernames(args.Usernames)
@@ -374,7 +433,7 @@ func parseStats(splitted []string) (Args, error) {
 	return Args{}, errors.New("You must pass a username to g! stats")
 }
 
-func makeRankGraph(args *Args) (img []byte, path string, err error) {
+func makeRankGraph(args *Args, s *discordgo.Session) (img []byte, path string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Error("Recovered in makeRankGraph", r)
@@ -388,7 +447,7 @@ func makeRankGraph(args *Args) (img []byte, path string, err error) {
 		return nil, "", err
 	}
 
-	src, _, err := RankLineChart(&c, args)
+	src, _, err := RankLineChart(&c, args, s)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err
@@ -399,7 +458,7 @@ func makeRankGraph(args *Args) (img []byte, path string, err error) {
 	return img, path, nil
 }
 
-func makeUserComparisonGraph(args *Args) (img []byte, path string, err error) {
+func makeUserComparisonGraph(args *Args, s *discordgo.Session) (img []byte, path string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Error("Recovered in makeUserComparisonGraph", r)
@@ -413,7 +472,7 @@ func makeUserComparisonGraph(args *Args) (img []byte, path string, err error) {
 		return nil, "", err
 	}
 
-	src, _, err := UserLineChart(&c, args)
+	src, _, err := UserLineChart(&c, args, s)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err
@@ -424,7 +483,7 @@ func makeUserComparisonGraph(args *Args) (img []byte, path string, err error) {
 	return img, path, nil
 }
 
-func makeUserSubtractionGraph(args *Args) (img []byte, path string, err error) {
+func makeUserSubtractionGraph(args *Args, s *discordgo.Session) (img []byte, path string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Error("Recovered in makeUserSubtractionGraph", r)
@@ -438,7 +497,7 @@ func makeUserSubtractionGraph(args *Args) (img []byte, path string, err error) {
 		return nil, "", err
 	}
 
-	src, _, err := SubLineChart(&c, args)
+	src, _, err := SubLineChart(&c, args, s)
 	// No milestones on this graph.
 	src.ShowMilestones = false
 	if err != nil {

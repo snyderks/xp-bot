@@ -1,0 +1,7 @@
+The following environment variables are needed on run:
+
+XP_BOT_TOKEN
+XP_BOT_UPDATE_INT_MIN
+XP_BOT_DB_URI
+TATSU_API_KEY
+XP_BOT_COLORS_PATH

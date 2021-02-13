@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -17,14 +18,16 @@ import (
 var database = "xp-bot"
 var daysCollection = "days"
 var peopleCollection = "people"
-var minutesBeforeNewRecord = 60
+var nicknamesCollection = "nicknames"
+var minutesBeforeNewRecord = 5
 
 // DB is a client used to interact with the database.
 type DB struct {
 	*mongo.Client
 
-	People *mongo.Collection
-	Days   *mongo.Collection
+	People    *mongo.Collection
+	Days      *mongo.Collection
+	Nicknames *mongo.Collection
 }
 
 type result struct {
@@ -53,7 +56,8 @@ func CreateDB(URI string) (DB, error) {
 	db := client.Database(database)
 	people := db.Collection(peopleCollection)
 	days := db.Collection(daysCollection)
-	return DB{client, people, days}, nil
+	nicknames := db.Collection(nicknamesCollection)
+	return DB{client, people, days, nicknames}, nil
 }
 
 // AddDay inserts a new record to track the top XP members for a day.
@@ -76,11 +80,11 @@ func (db *DB) AddDay(people map[string]primitives.Person) error {
 	if err == nil && !farEnoughInPast(result.Date) {
 		// Update everything in the map
 		for i, el := range result.People {
-			if val, ok := people[el.UName]; ok {
+			if val, ok := people[el.UserID]; ok {
 				result.People[i].Rank = val.Rank
 				result.People[i].XP = val.XP
 				// We used this one, so remove it from the map.
-				delete(people, el.UName)
+				delete(people, el.UserID)
 
 				// Determine if the min/max ranks need to be updated.
 				if val.Rank < result.MinRank {
@@ -165,7 +169,7 @@ func (db *DB) ReadNewestDay() (primitives.Day, error) {
 // If a username cannot be found, it will be returned in the notFound
 // variable. Errors from this function are not user-friendly.
 // This function is designed to succeed even with partial failure.
-func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
+func (db *DB) ReadPeople(UserIDs []string, maxDays int) (notFound []string,
 	people []primitives.HistoryRange, err error) {
 	ctx, cancel := transactionCTX()
 	defer cancel()
@@ -175,9 +179,9 @@ func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
 	people = make([]primitives.HistoryRange, 0)
 	opts := options.Find().SetSort(bson.M{"date": 1})
 
-	for _, uname := range unames {
+	for _, UserID := range UserIDs {
 		cursor, err := db.People.Find(ctx,
-			bson.M{"name": uname,
+			bson.M{"userid": UserID,
 				"date": bson.M{
 					"$gt": time.Now().AddDate(0, 0, -maxDays)}},
 			opts)
@@ -187,22 +191,22 @@ func (db *DB) ReadPeople(unames []string, maxDays int) (notFound []string,
 		person := make([]primitives.History, 0)
 		err = cursor.All(ctx, &person)
 		if len(person) == 0 {
-			notFound = append(notFound, uname)
+			notFound = append(notFound, UserID)
 		} else {
-			people = append(people, primitives.HistoryRange{History: person, UName: uname})
+			people = append(people, primitives.HistoryRange{History: person, UserID: UserID})
 		}
 	}
 	return notFound, people, nil
 }
 
-func (db *DB) readMostRecentPerson(uname string) (primitives.History, error) {
+func (db *DB) readMostRecentPerson(UserID string) (primitives.History, error) {
 	ctx, cancel := transactionCTX()
 	defer cancel()
 
 	opts := options.FindOne().SetSort(bson.M{"date": -1})
 	result := primitives.History{}
 
-	err := db.People.FindOne(ctx, bson.M{"name": uname}, opts).Decode(&result)
+	err := db.People.FindOne(ctx, bson.M{"userid": UserID}, opts).Decode(&result)
 	if err != nil {
 		return primitives.History{}, err
 	}
@@ -225,14 +229,14 @@ func (db *DB) AddPeople(people map[string]primitives.Person) error {
 		// or the result was more than minutesBeforeNewRecord
 		// old, so we make a new one.
 		if err != nil || farEnoughInPast(result.Date) {
-			result = primitives.History{UName: k, XP: v.XP, Date: t}
+			result = primitives.History{UserID: k, XP: v.XP, Date: t}
 			logger.Log.Info("Adding person:", result)
 			_, err = db.People.InsertOne(ctx, result)
 			if err != nil {
 				return err
 			}
 		} else {
-			result = primitives.History{ID: result.ID, UName: result.UName, XP: v.XP, Date: result.Date}
+			result = primitives.History{ID: result.ID, UserID: result.UserID, XP: v.XP, Date: result.Date}
 			logger.Log.Info("Updating person with ID", result.ID)
 			_, err = db.People.UpdateOne(ctx, bson.M{"_id": result.ID}, bson.M{"$set": result})
 			if err != nil {
@@ -241,4 +245,36 @@ func (db *DB) AddPeople(people map[string]primitives.Person) error {
 		}
 	}
 	return nil
+}
+
+// GetNicknames retrieves a list of nicknames based on user IDs from the DB.
+func (db *DB) GetNicknames(userIDs []string) map[string]primitives.Nickname {
+	ctx, cancel := transactionCTX()
+	defer cancel()
+
+	m := make(map[string]primitives.Nickname)
+
+	for _, id := range userIDs {
+		nick := primitives.Nickname{}
+		err := db.Nicknames.FindOne(ctx, bson.M{"userid": id}).Decode(&nick)
+		if err != nil {
+			m[id] = primitives.Nickname{}
+		}
+		m[id] = nick
+	}
+
+	return m
+}
+
+// SetNicknames takes a list of nicknames and either updates them or creates new ones.
+func (db *DB) SetNicknames(nicknames []primitives.Nickname) {
+	ctx, cancel := transactionCTX()
+	defer cancel()
+
+	fmt.Println(nicknames)
+
+	for _, nick := range nicknames {
+		db.Nicknames.FindOneAndUpdate(ctx, bson.M{"userid": nick.UserID},
+			bson.M{"$set": nick}, options.FindOneAndUpdate().SetUpsert(true))
+	}
 }

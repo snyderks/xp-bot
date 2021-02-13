@@ -15,10 +15,10 @@ func (x People) Less(i, j int) bool { return x[i].Rank < x[j].Rank }
 
 // History is a record of a user's XP at a given moment.
 type History struct {
-	ID    primitive.ObjectID `bson:"_id,omitempty"`
-	UName string             `bson:"name"`
-	XP    int                `bson:"xp"`
-	Date  time.Time          `bson:"date"`
+	ID     primitive.ObjectID `bson:"_id,omitempty"`
+	UserID string             `bson:"userid"`
+	XP     int                `bson:"xp"`
+	Date   time.Time          `bson:"date"`
 }
 
 // Day is the structure of the documents in the Days collection.
@@ -30,15 +30,23 @@ type Day struct {
 	MinRank int                `bson:"minRank"`
 }
 
-// Person is the XP for a given uname.
+// Person is the XP for a given Discord user ID.
 type Person struct {
-	UName string `bson:"name"`
-	XP    int    `bson:"xp"`
-	Rank  int    `bson:"rank"`
+	UserID string `bson:"userid"`
+	XP     int    `bson:"xp"`
+	Rank   int    `bson:"rank"`
+}
+
+// Nickname is a cache of the user's nickname.
+type Nickname struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	UserID      string             `bson:"userid"`
+	Nickname    string             `bson:"nickname"`
+	LastUpdated time.Time          `bson:"date"`
 }
 
 // HistoryRange is a list of moments of a user's XP.
 type HistoryRange struct {
 	History []History
-	UName   string
+	UserID  string
 }

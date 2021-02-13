@@ -31,7 +31,7 @@ func TestCreateDB(t *testing.T) {
 }
 
 func TestGetPeople(t *testing.T) {
-	people := []string{"ode"}
+	people := []string{"98183996185255936"}
 
 	client, _ := CreateDB(testURI)
 
@@ -43,7 +43,7 @@ func TestGetPeople(t *testing.T) {
 }
 
 func TestAddDay(t *testing.T) {
-	people := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1}}
+	people := map[string]primitives.Person{"98183996185255936": primitives.Person{UserID: "98183996185255936", XP: 5, Rank: 1}}
 	client, _ := CreateDB(testURI)
 
 	// Add a record that should just add and work.
@@ -57,20 +57,20 @@ func TestAddDay(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to retrieve a result.", err.Error())
 	}
-	if len(result.People) == 0 || result.People[0].UName != people["ode"].UName ||
+	if len(result.People) == 0 || result.People[0].UserID != people["ode"].UserID ||
 		result.People[0].XP != people["ode"].XP ||
 		result.People[0].Rank != people["ode"].Rank {
 		t.Error("Retrieved record mismatch. Expected", people, "got", result)
 	}
 
-	people2 := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1},
-		"croot": primitives.Person{UName: "croot", XP: 2, Rank: 2}}
+	people2 := map[string]primitives.Person{"ode": primitives.Person{UserID: "ode", XP: 5, Rank: 1},
+		"croot": primitives.Person{UserID: "croot", XP: 2, Rank: 2}}
 
 	client.AddDay(people2)
 
 	// Reassigning here because AddDay scribbles all over people2.
-	people2 = map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1},
-		"croot": primitives.Person{UName: "croot", XP: 2, Rank: 2}}
+	people2 = map[string]primitives.Person{"ode": primitives.Person{UserID: "ode", XP: 5, Rank: 1},
+		"croot": primitives.Person{UserID: "croot", XP: 2, Rank: 2}}
 	if err != nil {
 		t.Error("Failed to add the record.", err.Error())
 	}
@@ -80,10 +80,10 @@ func TestAddDay(t *testing.T) {
 		t.Error("Failed to retrieve a result.", err.Error())
 	}
 	// A long equality check, but good to be verbose here.
-	if len(result.People) != 2 || result.People[0].UName != people2["ode"].UName ||
+	if len(result.People) != 2 || result.People[0].UserID != people2["ode"].UserID ||
 		result.People[0].XP != people2["ode"].XP ||
 		result.People[0].Rank != people2["ode"].Rank ||
-		result.People[1].UName != people2["croot"].UName ||
+		result.People[1].UserID != people2["croot"].UserID ||
 		result.People[1].XP != people2["croot"].XP ||
 		result.People[1].Rank != people2["croot"].Rank {
 		t.Error("Retrieved record mismatch. Expected", people2, "got", result)
@@ -95,7 +95,7 @@ func TestAddDay(t *testing.T) {
 }
 
 func TestAddPerson(t *testing.T) {
-	person := map[string]primitives.Person{"ode": primitives.Person{UName: "ode", XP: 5, Rank: 1}}
+	person := map[string]primitives.Person{"ode": primitives.Person{UserID: "ode", XP: 5, Rank: 1}}
 
 	client, _ := CreateDB(testURI)
 

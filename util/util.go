@@ -1,7 +1,6 @@
 package util
 
 import (
-	"regexp"
 	"strings"
 	"time"
 
@@ -67,12 +66,11 @@ func Avg(hi, lo primitives.History) float64 {
 // StripUsernames removes @ and #XXXX from usernames
 // passed in, returning the results.
 func StripUsernames(arr []string) []string {
-	atRegex := regexp.MustCompile(`^@`)
-	poundRegex := regexp.MustCompile(`#\d+$`)
-	// Need to get rid of any user IDs and @s that they entered.
+	// Need to get rid of any chrome around the user ID.
 	for i := range arr {
-		arr[i] = atRegex.ReplaceAllString(arr[i], "")
-		arr[i] = poundRegex.ReplaceAllString(arr[i], "")
+		if len(arr[i]) > 3 {
+			arr[i] = arr[i][3 : len(arr[i])-1]
+		}
 	}
 	return arr
 }

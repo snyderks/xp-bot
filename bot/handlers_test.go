@@ -7,7 +7,7 @@ import (
 
 func TestParseGraphArgs(t *testing.T) {
 	t.Run("g!", func(t *testing.T) {
-		args, err := ParseGraphArgs("g!")
+		args, err := ParseGraphArgs("g!", "1")
 		expected := Args{Top: 10}
 
 		if !reflect.DeepEqual(args, expected) {
@@ -16,7 +16,7 @@ func TestParseGraphArgs(t *testing.T) {
 	})
 
 	t.Run("g! top 5", func(t *testing.T) {
-		args, err := ParseGraphArgs("g! top 5")
+		args, err := ParseGraphArgs("g! top 5", "1")
 		expected := Args{Top: 5}
 
 		if !reflect.DeepEqual(args, expected) {
@@ -25,7 +25,7 @@ func TestParseGraphArgs(t *testing.T) {
 	})
 
 	t.Run("g!top 5", func(t *testing.T) {
-		args, err := ParseGraphArgs("g! top 5")
+		args, err := ParseGraphArgs("g! top 5", "1")
 		expected := Args{Top: 5}
 
 		if !reflect.DeepEqual(args, expected) {
@@ -34,7 +34,7 @@ func TestParseGraphArgs(t *testing.T) {
 	})
 
 	t.Run("g! users Crouton ode", func(t *testing.T) {
-		args, err := ParseGraphArgs("g! users Crouton ode")
+		args, err := ParseGraphArgs("g! users Crouton ode", "1")
 		expected := Args{Usernames: []string{"Crouton", "ode"}}
 
 		if !reflect.DeepEqual(args, expected) {
@@ -43,7 +43,7 @@ func TestParseGraphArgs(t *testing.T) {
 	})
 
 	t.Run("g!users Crouton ode", func(t *testing.T) {
-		args, err := ParseGraphArgs("g! users Crouton ode")
+		args, err := ParseGraphArgs("g! users Crouton ode", "1")
 		expected := Args{Usernames: []string{"Crouton", "ode"}}
 
 		if !reflect.DeepEqual(args, expected) {
