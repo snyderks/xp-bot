@@ -1,6 +1,7 @@
 package util
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
@@ -67,12 +68,41 @@ func Avg(hi, lo primitives.History) float64 {
 // passed in, returning the results.
 func StripUsernames(arr []string) []string {
 	// Need to get rid of any chrome around the user ID.
+	// Discord user IDs are of the form <@!################>
+	// (amount of numbers should not be assumed)
+	startRegex := regexp.MustCompile(`^<@!`)
+	endRegex := regexp.MustCompile(`>$`)
+	// Need to get rid of any user IDs and @s that they entered.
 	for i := range arr {
-		if len(arr[i]) > 3 {
-			arr[i] = arr[i][3 : len(arr[i])-1]
-		}
+		arr[i] = startRegex.ReplaceAllString(arr[i], "")
+		arr[i] = endRegex.ReplaceAllString(arr[i], "")
 	}
 	return arr
+}
+
+// SpaceNormalizer guarantees that there will be no more than a single space
+// between all arguments *within* the command, including usernames.
+// For usernames, it also guarantees a space on either side of them.
+func SpaceNormalizer(s string) string {
+	// Discord user IDs are of the form <@!################>
+	// (amount of numbers should not be assumed)
+	startRegex := regexp.MustCompile(`\s*<@!`) // <@! with 0 or more spaces before it
+	endRegex := regexp.MustCompile(`>\s*`)     // > with 0 or more spaces after it
+	spaceRegex := regexp.MustCompile(`\s+`)    // 1 space or more
+	beginningSpaceRegex := regexp.MustCompile(`^\s+`)
+	endSpaceRegex := regexp.MustCompile(`\s+$`)
+
+	// Order is going to matter here for efficiency.
+	// 1. Add all spaces at the end of the usernames
+	// 2. Add all spaces at the beginning of the usernames
+	// 3. Remove all extra spaces between arguments
+	// 4. Remove all spaces at the beginning and end
+	s = startRegex.ReplaceAllLiteralString(s, " <@!")
+	s = endRegex.ReplaceAllLiteralString(s, "> ")
+	s = spaceRegex.ReplaceAllLiteralString(s, " ")
+	s = beginningSpaceRegex.ReplaceAllLiteralString(s, "")
+	s = endSpaceRegex.ReplaceAllLiteralString(s, "")
+	return s
 }
 
 // Round rounds to a given unit place.

@@ -51,6 +51,24 @@ func TestParseGraphArgs(t *testing.T) {
 		}
 	})
 
+	t.Run("g!users <@!99201752280096768> <@!98183996185255936>", func(t *testing.T) {
+		args, err := ParseGraphArgs("g!users <@!99201752280096768> <@!98183996185255936>", "1")
+		expected := Args{Usernames: []string{"99201752280096768", "98183996185255936"}}
+
+		if !reflect.DeepEqual(args, expected) {
+			t.Errorf("Got %v,\nexpected %v.\nError: %s", args, expected, err.Error())
+		}
+	})
+
+	t.Run("g!users <@!99201752280096768><@!98183996185255936>", func(t *testing.T) {
+		args, err := ParseGraphArgs("g!users <@!99201752280096768><@!98183996185255936>", "1")
+		expected := Args{Usernames: []string{"99201752280096768", "98183996185255936"}}
+
+		if !reflect.DeepEqual(args, expected) {
+			t.Errorf("Got %v,\nexpected %v.\nError: %s", args, expected, err.Error())
+		}
+	})
+
 	// t.Run("g! king", func(t *testing.T) {
 	// 	args, err := ParseGraphArgs("g! king")
 	// 	expected := Args{Top: 10, King: true}
