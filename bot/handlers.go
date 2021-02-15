@@ -69,10 +69,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if /* m.Author.Username == "Crouton" && */ strings.HasPrefix(m.Content, prefix) {
 		serveGraph(s, m)
 	}
-	// else if /*m.Author.Username == "Crouton"*/ m.Author.ID == tatsu &&
-	// 	m.Author.Bot && strings.Contains(m.Content, leaderboardTrigger) {
-	// 	parseNewEntry(s, m)
-	// }
 }
 
 // AppendRankings retrieves current server rankings and places them in the DB.
@@ -108,30 +104,6 @@ func AppendRankings() error {
 	}
 
 	return nil
-}
-
-func parseNewEntry(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// It's a Tatsumaki leaderboard to parse.
-	result, err := Parse(m.Content)
-	if err != nil {
-		logger.Log.Error("Couldn't parse Tatsumaki leaderboard: ", err.Error())
-		return
-	}
-
-	c, err := db.CreateDB(DBURI)
-	if err != nil {
-		logger.Log.Error("Couldn't connect to database: ", err.Error())
-		return
-	}
-
-	err = c.AddDay(result)
-	if err != nil {
-		logger.Log.Error("Couldn't log the day: ", err.Error())
-	}
-	err = c.AddPeople(result)
-	if err != nil {
-		logger.Log.Error("Couldn't log people: ", err.Error())
-	}
 }
 
 func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -318,6 +290,8 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 // ParseGraphArgs attempts to extract the graph arguments from a string.
 // Returns only user-friendly errors.
 func ParseGraphArgs(s string, senderID string) (Args, error) {
+	// Ensure the correct number of spaces between args
+	s = util.SpaceNormalizer(s)
 	splitted := strings.Split(s, " ")
 
 	// Allow for g!command as well.
@@ -419,8 +393,6 @@ func parseUsers(splitted []string) (Args, error) {
 	if len(splitted) > 1 {
 		args := Args{Usernames: make([]string, 0)}
 		for _, user := range splitted[1:] {
-			// @ed users have the following format: <@!USER_ID>.
-			// Therefore, take the 4th character to the 2nd to last.
 			args.Usernames = append(args.Usernames, user)
 		}
 		args.Usernames = util.StripUsernames(args.Usernames)
