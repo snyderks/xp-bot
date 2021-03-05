@@ -71,3 +71,6 @@ typings/
 
 # whatever this is
 .metals
+
+# settings stuff
+settings.json

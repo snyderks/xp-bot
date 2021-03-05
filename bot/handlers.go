@@ -109,8 +109,17 @@ func AppendRankings() error {
 func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// It's a request for the bot to serve a graph up.
 	logger.Log.Info("Handler matched on graph request. ",
-		" channel: ", m.ChannelID, " sent by: ", m.Author, " content: ", m.Content)
-	args, err := ParseGraphArgs(m.Content, m.Author.ID)
+		" channel: ", m.ChannelID, " sent by: ", m.Author, " (", m.Author.ID, ")", " content: ", m.Content)
+
+	userIDs := make([]string, len(m.Mentions))
+	for i, mention := range m.Mentions {
+		userIDs[i] = mention.ID
+	}
+
+	fmt.Println(userIDs)
+
+	args, err := ParseGraphArgs(m.Content, m.Author.ID, userIDs)
+	logger.Log.Info(args)
 	if err != nil {
 		s.ChannelMessageSend(
 			m.ChannelID,
@@ -178,7 +187,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 	}
 
 	if args.Usernames == nil {
-		args.Usernames = []string{m.Author.Username}
+		args.Usernames = []string{m.Author.ID}
 	}
 
 	// Looking to get lots of time.
@@ -289,7 +298,7 @@ func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Arg
 
 // ParseGraphArgs attempts to extract the graph arguments from a string.
 // Returns only user-friendly errors.
-func ParseGraphArgs(s string, senderID string) (Args, error) {
+func ParseGraphArgs(s string, senderID string, userIDs []string) (Args, error) {
 	// Ensure the correct number of spaces between args
 	s = util.SpaceNormalizer(s)
 	splitted := strings.Split(s, " ")
@@ -348,13 +357,13 @@ func ParseGraphArgs(s string, senderID string) (Args, error) {
 		return parseLast(splitted)
 	} else if util.StringChecker(startingArg, usersSwitch, caseInsensitive) {
 		// Users request.
-		return parseUsers(splitted)
+		return parseUsers(userIDs)
 	} else if util.StringChecker(startingArg, subSwitch, caseInsensitive) {
 		// Comparison request.
-		return parseSub(splitted)
+		return parseSub(userIDs)
 	} else if util.StringChecker(startingArg, statsSwitch, caseInsensitive) {
 		// Stats request.
-		return parseStats(splitted)
+		return parseStats(userIDs)
 	} else if util.StringChecker(startingArg, manualUpdate, caseInsensitive) && senderID == croot {
 		// Manual update
 		return Args{Update: true}, nil
@@ -389,36 +398,26 @@ func parseLast(splitted []string) (Args, error) {
 	return Args{Days: 365, Top: 10}, nil
 }
 
-func parseUsers(splitted []string) (Args, error) {
-	if len(splitted) > 1 {
-		args := Args{Usernames: make([]string, 0)}
-		for _, user := range splitted[1:] {
-			args.Usernames = append(args.Usernames, user)
-		}
-		args.Usernames = util.StripUsernames(args.Usernames)
-		return args, nil
+func parseUsers(userIDs []string) (Args, error) {
+	if len(userIDs) > 0 {
+		return Args{Usernames: userIDs}, nil
 	}
 	// Default error
 	return Args{}, errors.New("You must pass at least one user to g! users")
 }
 
-func parseSub(splitted []string) (Args, error) {
-	if len(splitted) > 1 && len(splitted) < 4 {
-		args := Args{Usernames: make([]string, 0), Sub: true}
-		for _, user := range splitted[1:] {
-			args.Usernames = append(args.Usernames, user)
-		}
-		args.Usernames = util.StripUsernames(args.Usernames)
-		return args, nil
+func parseSub(userIDs []string) (Args, error) {
+	if len(userIDs) == 2 {
+		return Args{Usernames: userIDs, Sub: true}, nil
 	}
 	// Default
 	return Args{}, errors.New("You must pass two users to g! compare")
 }
 
-func parseStats(splitted []string) (Args, error) {
-	if len(splitted) > 1 {
-		return Args{Usernames: util.StripUsernames([]string{splitted[1]}), Stats: true}, nil
-	} else if len(splitted) == 1 {
+func parseStats(userIDs []string) (Args, error) {
+	if len(userIDs) > 0 {
+		return Args{Usernames: userIDs, Stats: true}, nil
+	} else {
 		return Args{Usernames: nil, Stats: true}, nil
 	}
 	// Default error
