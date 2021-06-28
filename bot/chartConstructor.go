@@ -29,8 +29,8 @@ fixing the following usernames:`
 // and returns the source and a list of usernames that couldn't be retrieved.
 // Returns an error if the most recent day doesn't contain all the required
 // records or if a generic error occurred.
-func RankLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
-	day, err := c.ReadNewestDay()
+func RankLineChart(args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
+	day, err := db.ReadNewestDay()
 	if err != nil {
 		return chart.LineChartSource{}, nil, errors.New(fmt.Sprint("failed to retrieve day", err.Error()))
 	}
@@ -53,7 +53,7 @@ func RankLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartS
 	if args.Days == 0 {
 		args.Days = chart.GlobalChartConfig.DaysLimit
 	}
-	notFound, xpHistories, err := c.ReadPeople(people,
+	notFound, xpHistories, err := db.ReadPeople(people,
 		args.Days)
 
 	series, x, overallMax, overallMin := constructSeries(xpHistories)
@@ -91,13 +91,13 @@ func RankLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartS
 // UserLineChart retrieves records to construct a line chart of the users specified
 // and returns the source and a list of usernames that couldn't be retrieved.
 // Returns an error if a user wasn't found or if a generic error occurs.
-func UserLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
+func UserLineChart(args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
 	// Get XP history for each person
 	// Replace property on args with default if necessary
 	if args.Days == 0 {
 		args.Days = chart.GlobalChartConfig.DaysLimit
 	}
-	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
+	notFound, xpHistories, err := db.ReadPeople(args.Usernames,
 		args.Days)
 
 	// Replace list of user IDs with usernames
@@ -136,13 +136,13 @@ func UserLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartS
 // SubLineChart retrieves records to construct a line chart with one user's
 // XP subtracted from another user.
 // Returns an error if a user wasn't found or if a generic error occurs.
-func SubLineChart(c *db.DB, args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
+func SubLineChart(args *Args, s *discordgo.Session) (chart.LineChartSource, []string, error) {
 	// Get XP history for each person
 	// Replace property on args with default if necessary
 	if args.Days == 0 {
 		args.Days = chart.GlobalChartConfig.DaysLimit
 	}
-	notFound, xpHistories, err := c.ReadPeople(args.Usernames,
+	notFound, xpHistories, err := db.ReadPeople(args.Usernames,
 		args.Days)
 
 	// Replace list of user IDs with usernames
