@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,11 +16,6 @@ import (
 	"github.com/snyderks/xp-bot/util"
 
 	"github.com/akamensky/argparse"
-)
-
-var (
-	// DBURI is the location of the database.
-	DBURI = os.Getenv("XP_BOT_DB_URI")
 )
 
 var (
@@ -79,25 +73,19 @@ func AppendRankings() error {
 		return err
 	}
 
-	c, err := db.CreateDB(DBURI)
-	if err != nil {
-		logger.Log.Error("Couldn't connect to database: ", err.Error())
-		return err
-	}
-
 	peopleMap, err := RankingsToPeople(ranks)
 	if err != nil {
 		logger.Log.Error("Conversion failed: ", err.Error())
 		return err
 	}
 
-	err = c.AddDay(peopleMap)
+	err = db.AddDay(peopleMap)
 	if err != nil {
 		logger.Log.Error("DB insert failed: ", err.Error())
 		return err
 	}
 
-	err = c.AddPeople(peopleMap)
+	err = db.AddPeople(peopleMap)
 	if err != nil {
 		logger.Log.Error("DB insert failed: ", err.Error())
 		return err
@@ -176,22 +164,12 @@ func serveGraph(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func sendStatsMessage(s *discordgo.Session, m *discordgo.MessageCreate, args Args) {
-	// Get the XP for the person.
-	c, err := db.CreateDB(DBURI)
-	if err != nil {
-		logger.Log.Error("Couldn't connect to database:", err.Error())
-		s.ChannelMessageSend(m.ChannelID,
-			"Failed to create the stats lookup. "+
-				"(Something is probs wrong with the DB.)")
-		return
-	}
-
 	if args.Usernames == nil {
 		args.Usernames = []string{m.Author.ID}
 	}
 
 	// Looking to get lots of time.
-	notFound, people, err := c.ReadPeople(args.Usernames, 365)
+	notFound, people, err := db.ReadPeople(args.Usernames, 365)
 
 	if err != nil {
 		logger.Log.Error("Couldn't get the people for some reason:",
@@ -432,13 +410,7 @@ func makeRankGraph(args *Args, s *discordgo.Session) (img []byte, path string, e
 		}
 	}()
 
-	c, err := db.CreateDB(DBURI)
-	if err != nil {
-		logger.Log.Error("Couldn't connect to database:", err.Error())
-		return nil, "", err
-	}
-
-	src, _, err := RankLineChart(&c, args, s)
+	src, _, err := RankLineChart(args, s)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err
@@ -457,13 +429,12 @@ func makeUserComparisonGraph(args *Args, s *discordgo.Session) (img []byte, path
 		}
 	}()
 
-	c, err := db.CreateDB(DBURI)
 	if err != nil {
 		logger.Log.Error("Couldn't connect to database:", err.Error())
 		return nil, "", err
 	}
 
-	src, _, err := UserLineChart(&c, args, s)
+	src, _, err := UserLineChart(args, s)
 	if err != nil {
 		logger.Log.Error("Failed to construct chart:", err.Error())
 		return nil, "", err
@@ -482,13 +453,7 @@ func makeUserSubtractionGraph(args *Args, s *discordgo.Session) (img []byte, pat
 		}
 	}()
 
-	c, err := db.CreateDB(DBURI)
-	if err != nil {
-		logger.Log.Error("Couldn't connect to database:", err.Error())
-		return nil, "", err
-	}
-
-	src, _, err := SubLineChart(&c, args, s)
+	src, _, err := SubLineChart(args, s)
 	// No milestones on this graph.
 	src.ShowMilestones = false
 	if err != nil {

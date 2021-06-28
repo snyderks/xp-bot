@@ -1,3 +1,5 @@
+.DS_Store
+
 # executable
 xp-bot
 xp-bot-prod
@@ -74,3 +76,5 @@ typings/
 
 # settings stuff
 settings.json
+
+

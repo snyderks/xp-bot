@@ -12,14 +12,10 @@ import (
 
 // GetNicknames retrives nicknames for a list of user IDs.
 func GetNicknames(userIDs []string, s *discordgo.Session) (map[string]string, error) {
-	d, err := db.CreateDB(DBURI)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to initialize DB: %s", err.Error())
-	}
-
+	// Get current time and store it so latency
+	// between retrievals doesn't affect data.
 	now := time.Now()
-
-	results := d.GetNicknames(userIDs)
+	results := db.GetNicknames(userIDs)
 
 	toUpdate := make([]primitives.Nickname, 0)
 
@@ -42,7 +38,7 @@ func GetNicknames(userIDs []string, s *discordgo.Session) (map[string]string, er
 		}
 	}
 	// Want to return results ASAP, so do this in another thread.
-	go d.SetNicknames(toUpdate)
+	go db.SetNicknames(toUpdate)
 
 	fmt.Println(results)
 	// Extract nicknames from the results.
